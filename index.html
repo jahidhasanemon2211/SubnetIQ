@@ -10,20 +10,20 @@
 <style>
   :root {
     color-scheme: dark;
-    /* macOS-inspired palette */
-    --bg:       #141416;
-    --surface:  #1C1C1E;
-    --surface-2:#232325;
-    --input:    #111113;
-    --line:     #2C2C2E;
-    --line-2:   #38383A;
-    --text:     #F5F5F7;
-    --muted:    #8E8E93;
-    --accent:   #0A84FF;   /* macOS Blue */
-    --accent-h: #0071E3;
-    --ok:       #30D158;   /* macOS Green */
-    --warn:     #FF9F0A;   /* macOS Amber */
-    --err:      #FF453A;   /* macOS Red */
+    /* Cyber-Console palette */
+    --bg:       #0B0F19;
+    --surface:  #161B26;
+    --surface-2:#1E2535;
+    --input:    #0F172A;
+    --line:     #232D3F;
+    --line-2:   #334155;
+    --text:     #F8FAFC;
+    --muted:    #94A3B8;
+    --accent:   #EF4444;   /* Crimson Red */
+    --accent-h: #DC2626;
+    --ok:       #10B981;   /* Terminal Green */
+    --warn:     #F59E0B;   /* Amber */
+    --err:      #EF4444;   /* Red */
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -38,20 +38,63 @@
     font-family: -apple-system, 'IBM Plex Sans', BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  ::selection { background: rgba(10,132,255,.35); }
+  ::selection { background: rgba(239,68,68,.35); }
 
   .mono { font-family: 'IBM Plex Mono', 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
-  /* macOS vibrancy panel */
+  /* Terminal panel */
   .panel {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
-    /* subtle inner highlight at top — mimics macOS light catch */
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.06),
-      0 1px 3px rgba(0,0,0,.35),
-      0 4px 12px rgba(0,0,0,.2);
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 1px 3px rgba(0,0,0,.5),
+      0 4px 16px rgba(0,0,0,.35);
+  }
+
+  /* macOS-style titlebar for main app */
+  .terminal-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #111827;
+    border-bottom: 1px solid var(--line);
+    border-radius: 12px 12px 0 0;
+    padding: 10px 16px;
+    position: relative;
+  }
+  .terminal-titlebar .dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .terminal-titlebar .title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .75rem;
+    color: var(--muted);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .dot-close    { display:inline-block;width:12px;height:12px;border-radius:50%;background:#FF5F56;border:1px solid #E0443E; }
+  .dot-minimize { display:inline-block;width:12px;height:12px;border-radius:50%;background:#FFBD2E;border:1px solid #DEA123; }
+  .dot-maximize { display:inline-block;width:12px;height:12px;border-radius:50%;background:#27C93F;border:1px solid #1AAB29; }
+
+  /* Main app wrapper with titlebar */
+  .terminal-window {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow:
+      0 1px 3px rgba(0,0,0,.5),
+      0 8px 32px rgba(0,0,0,.4);
+  }
+  .terminal-window-body {
+    padding: 0;
   }
 
   /* macOS-style text field */
@@ -61,20 +104,20 @@
     border-radius: 8px;
     color: var(--text);
     transition: border-color .15s ease, box-shadow .15s ease;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,.3);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.4);
   }
   .field::placeholder { color: var(--muted); opacity: 1; }
   .field:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(10,132,255,.3), inset 0 1px 3px rgba(0,0,0,.2);
+    box-shadow: 0 0 0 3px rgba(239,68,68,.35), inset 0 1px 3px rgba(0,0,0,.2);
   }
   .field.invalid {
     border-color: var(--err);
-    box-shadow: 0 0 0 3px rgba(255,69,58,.25), inset 0 1px 3px rgba(0,0,0,.2);
+    box-shadow: 0 0 0 3px rgba(239,68,68,.25), inset 0 1px 3px rgba(0,0,0,.2);
   }
 
-  /* macOS-style slider — blue track + round white thumb */
+  /* Slider — red/crimson thumb */
   input[type=range] {
     -webkit-appearance: none;
     appearance: none;
@@ -91,17 +134,17 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #FFFFFF;
-    border: none;
+    background: #EF4444;
+    border: 2px solid #DC2626;
     box-shadow: 0 1px 4px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.2);
     cursor: pointer;
     transition: transform .1s ease;
   }
-  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.08); }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.08); background: #DC2626; }
   input[type=range]::-webkit-slider-thumb:active { transform: scale(0.95); }
   input[type=range]::-moz-range-thumb {
     width: 20px; height: 20px; border-radius: 50%;
-    background: #fff; border: none;
+    background: #EF4444; border: 2px solid #DC2626;
     box-shadow: 0 1px 4px rgba(0,0,0,.55);
     cursor: pointer;
   }
@@ -117,7 +160,7 @@
   }
   .row:last-child { border-bottom: 0; }
 
-  /* macOS-style buttons */
+  /* Buttons */
   .btn {
     border-radius: 8px;
     padding: 7px 16px;
@@ -129,33 +172,32 @@
     border: none;
   }
   .btn:active { transform: scale(.97); }
-  .btn:focus-visible { outline: 3px solid rgba(10,132,255,.5); outline-offset: 2px; }
+  .btn:focus-visible { outline: 3px solid rgba(239,68,68,.5); outline-offset: 2px; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-  /* macOS primary (blue filled) */
+  /* Primary — red */
   .btn-primary {
-    background: var(--accent);
+    background: #EF4444;
     color: #fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 1px 3px rgba(0,0,0,.4);
   }
-  .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+  .btn-primary:hover:not(:disabled) { background: #DC2626; filter: brightness(1.05); }
   .btn-primary.done { background: var(--ok); color: #fff; }
 
-  /* macOS secondary (filled gray) */
+  /* Ghost */
   .btn-ghost {
     background: var(--surface-2);
     color: var(--text);
     border: 1px solid var(--line-2);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 1px 2px rgba(0,0,0,.25);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 1px 2px rgba(0,0,0,.3);
   }
-  .btn-ghost:hover:not(:disabled) { filter: brightness(1.12); }
+  .btn-ghost:hover:not(:disabled) { filter: brightness(1.15); }
 
-  /* select box */
   select { cursor: pointer; }
 
   .results-dim { opacity: .3; pointer-events: none; }
 
-  /* Subnet all-table */
+  /* All-subnets table */
   #all-table { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   #all-table table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
   #all-table thead th {
@@ -175,11 +217,33 @@
   #all-table tbody tr:first-child td { border-top: 0; }
   #all-table tbody tr:hover td { background: var(--surface-2); }
 
-  /* macOS traffic-light dots in modal titlebar */
-  #m-bar { background: var(--input); border: 1px solid var(--line); border-bottom: 0; border-radius: 10px 10px 0 0; padding: 10px 14px; font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  /* Modal terminal bar */
+  #m-bar {
+    background: #05080F;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    padding: 10px 14px;
+    font-size: .75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
   #m-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-  #m-bar span { margin-left: 4px; }
-  #m-out { background: #0A0A0C; border: 1px solid var(--line); border-radius: 0 0 10px 10px; padding: 14px; overflow: auto; max-height: 38vh; white-space: pre; font-size: .8125rem; line-height: 1.7; color: var(--text); }
+  #m-bar span { margin-left: 4px; font-family: 'IBM Plex Mono', monospace; }
+  #m-out {
+    background: #05080F;
+    border: 1px solid var(--line);
+    border-radius: 0 0 10px 10px;
+    padding: 14px;
+    overflow: auto;
+    max-height: 38vh;
+    white-space: pre;
+    font-size: .8125rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
 
   /* ISP/ASN inline card */
   .isp-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 7px; animation: blink 1.2s ease-in-out infinite; }
@@ -213,113 +277,140 @@
 <body class="min-h-screen">
 <main class="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10 lg:max-w-6xl lg:px-8 lg:py-12">
 
-  <!-- Header -->
-  <header class="mb-8">
-    <h1 class="flex items-center gap-3 text-2xl sm:text-3xl font-semibold tracking-tight">
-      <!-- macOS-blue icon pill -->
-      <span class="mono inline-flex items-center justify-center rounded-lg text-sm font-semibold"
-            style="width:2.25rem;height:2.25rem;background:var(--accent);color:#fff;" aria-hidden="true">/24</span>
-      SubnetIQ
-    </h1>
-    <p class="mt-2 text-sm" style="color:var(--muted)">IPv4 subnet calculator with a MikroTik IP pool generator. Enter an address and pick a prefix length to see the network range, masks and usable hosts.</p>
-  </header>
+  <!-- macOS Terminal Titlebar -->
+  <div class="terminal-titlebar mb-0 rounded-b-none" style="border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;margin-bottom:0;">
+    <div class="dots">
+      <span class="dot-close"></span>
+      <span class="dot-minimize"></span>
+      <span class="dot-maximize"></span>
+    </div>
+    <span class="title mono">bash — SubnetIQ v1.0</span>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:1.5rem 1.5rem 0.5rem;margin-bottom:2rem;">
 
-  <!-- Two-column layout matching original -->
-  <div class="grid gap-5 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-6 lg:items-start xl:grid-cols-[minmax(0,27rem)_minmax(0,1fr)]">
-  <div class="grid gap-5">
+    <!-- Header -->
+    <header class="mb-8">
+      <h1 class="flex items-center gap-3 text-2xl sm:text-3xl font-semibold tracking-tight">
+        <!-- Red icon pill -->
+        <span class="mono inline-flex items-center justify-center rounded-lg text-sm font-semibold"
+              style="width:2.25rem;height:2.25rem;background:var(--accent);color:#fff;" aria-hidden="true">/24</span>
+        SubnetIQ
+      </h1>
+      <p class="mt-2 text-sm" style="color:var(--muted)">IPv4 subnet calculator with a MikroTik IP pool generator. Enter an address and pick a prefix length to see the network range, masks and usable hosts.</p>
+    </header>
 
-    <!-- Inputs Panel -->
-    <section class="panel p-5 sm:p-6">
-      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+    <!-- Two-column layout -->
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-6 lg:items-start xl:grid-cols-[minmax(0,27rem)_minmax(0,1fr)]">
+    <div class="grid gap-5">
 
-        <div>
-          <label for="ip" class="block text-sm font-medium mb-2">IPv4 address</label>
-          <input id="ip" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
-                 value="192.168.1.50" placeholder="192.168.1.50"
-                 class="field mono w-full px-3 py-2.5 text-base" aria-describedby="ip-msg">
-          <p id="ip-msg" class="mt-2 text-sm min-h-[1.25rem]" role="alert" aria-live="polite"></p>
-          <div id="isp" class="hidden mt-3 rounded-lg p-3 text-sm"
-               style="background:var(--input);border:1px solid var(--line)" aria-live="polite"></div>
+      <!-- Inputs Panel -->
+      <section class="panel p-5 sm:p-6">
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+
+          <div>
+            <label for="ip" class="block text-sm font-medium mb-2">IPv4 address</label>
+            <input id="ip" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   value="192.168.1.50" placeholder="192.168.1.50"
+                   class="field mono w-full px-3 py-2.5 text-base" aria-describedby="ip-msg">
+            <p id="ip-msg" class="mt-2 text-sm min-h-[1.25rem]" role="alert" aria-live="polite"></p>
+            <div id="isp" class="hidden mt-3 rounded-lg p-3 text-sm"
+                 style="background:var(--input);border:1px solid var(--line)" aria-live="polite"></div>
+          </div>
+
+          <div>
+            <label for="mask" class="block text-sm font-medium mb-2">Subnet mask</label>
+            <select id="mask" class="field mono w-full px-3 py-2.5 text-base"></select>
+            <div class="mt-4 flex items-center gap-3">
+              <span class="mono text-sm w-10" style="color:var(--muted)">/1</span>
+              <input id="cidr" type="range" min="1" max="32" value="24" aria-label="CIDR prefix length">
+              <span class="mono text-sm w-10 text-right" style="color:var(--muted)">/32</span>
+            </div>
+          </div>
+
         </div>
+      </section>
 
-        <div>
-          <label for="mask" class="block text-sm font-medium mb-2">Subnet mask</label>
-          <select id="mask" class="field mono w-full px-3 py-2.5 text-base"></select>
-          <div class="mt-4 flex items-center gap-3">
-            <span class="mono text-sm w-10" style="color:var(--muted)">/1</span>
-            <input id="cidr" type="range" min="1" max="32" value="24" aria-label="CIDR prefix length">
-            <span class="mono text-sm w-10 text-right" style="color:var(--muted)">/32</span>
+      <!-- Results Panel -->
+      <section class="panel p-5 sm:p-6" aria-label="Results">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+          <h2 class="text-base font-semibold">Results</h2>
+          <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button id="export" type="button" class="btn btn-ghost">Generate MikroTik CLI</button>
+            <button id="copy"   type="button" class="btn btn-primary">Copy results</button>
           </div>
         </div>
+        <dl id="results" class="mt-2"></dl>
+      </section>
 
-      </div>
+    </div>
+
+    <!-- All Networks Panel -->
+    <section id="all-wrap" class="panel p-5 sm:p-6 hidden" aria-labelledby="all-title">
+      <h2 id="all-title" class="text-base font-semibold"></h2>
+      <p id="all-sub" class="text-sm mt-1" style="color:var(--muted)"></p>
+      <div id="all-table" class="mt-4 overflow-x-auto"></div>
     </section>
 
-    <!-- Results Panel -->
-    <section class="panel p-5 sm:p-6" aria-label="Results">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
-        <h2 class="text-base font-semibold">Results</h2>
-        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <button id="export" type="button" class="btn btn-ghost">Generate MikroTik CLI</button>
-          <button id="copy"   type="button" class="btn btn-primary">Copy results</button>
-        </div>
-      </div>
-      <dl id="results" class="mt-2"></dl>
-    </section>
+    </div><!-- end grid -->
 
-  </div>
+    <footer class="mt-10 text-center text-sm" style="color:var(--muted)">
+      Handcrafted with ❤️ by Md Jahid Hasan Emon &copy; 2026
+    </footer>
 
-  <!-- All Networks Panel -->
-  <section id="all-wrap" class="panel p-5 sm:p-6 hidden" aria-labelledby="all-title">
-    <h2 id="all-title" class="text-base font-semibold"></h2>
-    <p id="all-sub" class="text-sm mt-1" style="color:var(--muted)"></p>
-    <div id="all-table" class="mt-4 overflow-x-auto"></div>
-  </section>
-
-  </div><!-- end grid -->
-
-  <footer class="mt-10 text-center text-sm" style="color:var(--muted)">
-    Handcrafted with ❤️ by Md Jahid Hasan Emon &copy; 2026
-  </footer>
+  </div><!-- end terminal window body -->
 </main>
 
 <!-- MikroTik Export Modal -->
 <div id="modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-     style="background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding-top:calc(1rem + env(safe-area-inset-top,0px));padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))">
+     style="background:rgba(0,0,0,.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding-top:calc(1rem + env(safe-area-inset-top,0px));padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))">
   <div role="dialog" aria-modal="true" aria-labelledby="m-title"
-       class="panel w-full max-w-2xl max-h-full overflow-y-auto p-5 sm:p-6">
-    <div class="flex items-start justify-between gap-3">
+       class="w-full max-w-2xl max-h-full overflow-y-auto"
+       style="border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6);">
+
+    <!-- Modal macOS terminal titlebar -->
+    <div style="background:#111827;border:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;padding:10px 16px;display:flex;align-items:center;position:relative;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="dot-close"></span>
+        <span class="dot-minimize"></span>
+        <span class="dot-maximize"></span>
+      </div>
+      <span class="mono" style="position:absolute;left:50%;transform:translateX(-50%);font-size:.75rem;color:var(--muted);pointer-events:none;white-space:nowrap;">RouterOS terminal</span>
+      <button id="m-x" type="button" class="btn btn-ghost px-3 py-1 text-base leading-none" aria-label="Close" style="margin-left:auto;min-height:unset;">&times;</button>
+    </div>
+
+    <!-- Modal body -->
+    <div class="p-5 sm:p-6" style="background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;">
       <div>
         <h2 id="m-title" class="text-base font-semibold">Generate MikroTik CLI</h2>
         <p class="text-sm mt-1" style="color:var(--muted)">Enter a name and choose an IP range, then submit to get the RouterOS commands.</p>
       </div>
-      <button id="m-x" type="button" class="btn btn-ghost px-3 py-1.5 text-base leading-none" aria-label="Close">&times;</button>
-    </div>
-    <div class="mt-5 grid gap-4">
-      <div>
-        <label for="m-name" class="block text-sm font-medium mb-2">Name</label>
-        <input id="m-name" type="text" maxlength="32" autocomplete="off" spellcheck="false"
-               placeholder="e.g. LAN_Office" class="field mono w-full px-3 py-2.5 text-base">
+      <div class="mt-5 grid gap-4">
+        <div>
+          <label for="m-name" class="block text-sm font-medium mb-2">Name</label>
+          <input id="m-name" type="text" maxlength="32" autocomplete="off" spellcheck="false"
+                 placeholder="e.g. LAN_Office" class="field mono w-full px-3 py-2.5 text-base">
+        </div>
+        <div>
+          <label for="m-range" class="block text-sm font-medium mb-2">Select IP range</label>
+          <select id="m-range" class="field mono w-full px-3 py-2.5 text-base"></select>
+        </div>
       </div>
-      <div>
-        <label for="m-range" class="block text-sm font-medium mb-2">Select IP range</label>
-        <select id="m-range" class="field mono w-full px-3 py-2.5 text-base"></select>
+      <p id="m-err" class="mt-3 text-sm min-h-[1.25rem]" role="alert" style="color:var(--err)"></p>
+      <button id="m-gen" type="button" class="btn btn-primary text-sm w-full sm:w-auto mt-1">Submit</button>
+      <!-- macOS-style terminal output bar -->
+      <div id="m-bar" class="hidden mt-4">
+        <i style="background:#FF5F57"></i>
+        <i style="background:#FEBC2E"></i>
+        <i style="background:#28C840"></i>
+        <span class="mono">RouterOS terminal</span>
+      </div>
+      <pre id="m-out" class="mono hidden" tabindex="0" aria-label="RouterOS commands"></pre>
+      <div class="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
+        <button id="m-close" type="button" class="btn btn-ghost text-sm">Close</button>
+        <button id="m-copy"  type="button" class="btn btn-primary text-sm hidden">Copy to Clipboard</button>
       </div>
     </div>
-    <p id="m-err" class="mt-3 text-sm min-h-[1.25rem]" role="alert" style="color:var(--err)"></p>
-    <button id="m-gen" type="button" class="btn btn-primary text-sm w-full sm:w-auto mt-1">Submit</button>
-    <!-- macOS-style terminal bar -->
-    <div id="m-bar" class="hidden mt-4">
-      <i style="background:#FF5F57"></i>
-      <i style="background:#FEBC2E"></i>
-      <i style="background:#28C840"></i>
-      <span class="mono">RouterOS terminal</span>
-    </div>
-    <pre id="m-out" class="mono hidden" tabindex="0" aria-label="RouterOS commands"></pre>
-    <div class="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
-      <button id="m-close" type="button" class="btn btn-ghost text-sm">Close</button>
-      <button id="m-copy"  type="button" class="btn btn-primary text-sm hidden">Copy to Clipboard</button>
-    </div>
+
   </div>
 </div>
 
@@ -449,7 +540,7 @@
     if(out.type==='Public'){
       const tag=document.createElement('span');
       tag.textContent='Public';
-      tag.style.cssText='color:var(--warn);background:rgba(255,159,10,.12);border:1px solid rgba(255,159,10,.4);border-radius:999px;padding:1px 8px;font-size:.8125rem;';
+      tag.style.cssText='color:var(--warn);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:999px;padding:1px 8px;font-size:.8125rem;';
       msgEl.appendChild(tag);
     } else {
       msgEl.textContent+=out.type+'.';
@@ -501,14 +592,14 @@
       else if(cidr===31){first=net;last=bc;pool='';}
       allNets.push({net:toDotted(net),cidr,first:toDotted(first),last:toDotted(last),bc:toDotted(bc),pool,hit:ipn>=net&&ipn<=bc});
       const hit=ipn>=net&&ipn<=bc;
-      rows+='<tr'+(hit?' style="background:rgba(10,132,255,.1)"':'')+'>'
-        +'<td class="'+td+'"'+(hit?' style="color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)"':'')
-        +' data-l="Network">'+toDotted(net)+'</td>'
-        +'<td class="'+td+'" data-l="Usable range">'+toDotted(first)+' &ndash; '+toDotted(last)+'</td>'
+      rows+='<tr'+(hit?' style="background:rgba(239,68,68,.1)"':'')+'>'\
+        +'<td class="'+td+'"'+(hit?' style="color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)"':'')\
+        +' data-l="Network">'+toDotted(net)+'</td>'\
+        +'<td class="'+td+'" data-l="Usable range">'+toDotted(first)+' &ndash; '+toDotted(last)+'</td>'\
         +'<td class="'+td+'" data-l="Broadcast">'+toDotted(bc)+'</td></tr>';
     }
-    allTable.innerHTML='<table class="w-full min-w-[480px]"><thead><tr>'
-      +['Network address','Usable host range','Broadcast address'].map(h=>'<th>'+h+'</th>').join('')
+    allTable.innerHTML='<table class="w-full min-w-[480px]"><thead><tr>'\
+      +['Network address','Usable host range','Broadcast address'].map(h=>'<th>'+h+'</th>').join('')\
       +'</tr></thead><tbody>'+rows+'</tbody></table>';
     allWrap.classList.remove('hidden');
   }
@@ -529,12 +620,12 @@
     if(!org&&!asn){ispFail();return;}
     const loc=[d.city,d.country||d.country_name].filter(Boolean).join(', ')+(d.country_code?' ('+d.country_code+')':'');
     const badge='<span class="mono" style="border:1px solid var(--line-2);border-radius:999px;padding:1px 8px;font-size:.75rem;color:var(--muted)">'+esc(loc)+'</span>';
-    ispShow('<div style="display:grid;gap:6px">'
-      +ispRow('ISP / Organization',esc(org||'Unknown'))
-      +ispRow('ASN',esc(asn||'Unknown'))
-      +(d.prefix?ispRow('Prefix',esc(d.prefix)):'')
-      +(loc.trim()?ispRow('Location',badge):'')
-      +ispRow('BGP details',heLink())
+    ispShow('<div style="display:grid;gap:6px">'\
+      +ispRow('ISP / Organization',esc(org||'Unknown'))\
+      +ispRow('ASN',esc(asn||'Unknown'))\
+      +(d.prefix?ispRow('Prefix',esc(d.prefix)):'')\
+      +(loc.trim()?ispRow('Location',badge):'')\
+      +ispRow('BGP details',heLink())\
       +'</div>');
   }
 
