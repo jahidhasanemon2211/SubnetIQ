@@ -13,7 +13,7 @@
   <style>
     :root {
       color-scheme: dark;
-      /* Cyber-Console palette */
+      /* Cyber-Console Dark Palette */
       --bg: #0B0F19;
       --surface: #161B26;
       --surface-2: #1E2535;
@@ -23,19 +23,37 @@
       --text: #F8FAFC;
       --muted: #94A3B8;
       --accent: #EF4444;
-      /* Crimson Red */
       --accent-h: #DC2626;
       --ok: #10B981;
-      /* Terminal Green */
       --warn: #F59E0B;
-      /* Amber */
       --err: #EF4444;
-      /* Red */
+      --tb-bg: #111827;
+      --modal-con: #05080F;
       box-sizing: border-box;
       padding-top: env(safe-area-inset-top, 0px);
       padding-bottom: env(safe-area-inset-bottom, 0px);
       padding-left: env(safe-area-inset-left, 0px);
       padding-right: env(safe-area-inset-right, 0px);
+    }
+
+    [data-theme="light"] {
+      color-scheme: light;
+      /* Clean Modern Light Palette */
+      --bg: #F1F5F9;
+      --surface: #FFFFFF;
+      --surface-2: #F8FAFC;
+      --input: #F1F5F9;
+      --line: #E2E8F0;
+      --line-2: #CBD5E1;
+      --text: #0F172A;
+      --muted: #64748B;
+      --accent: #EF4444;
+      --accent-h: #DC2626;
+      --ok: #059669;
+      --warn: #D97706;
+      --err: #DC2626;
+      --tb-bg: #E2E8F0;
+      --modal-con: #0F172A;
     }
 
     html {
@@ -78,8 +96,9 @@
     .terminal-titlebar {
       display: flex;
       align-items: center;
-      gap: 0;
-      background: #111827;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--tb-bg);
       border-bottom: 1px solid var(--line);
       border-radius: 12px 12px 0 0;
       padding: 10px 16px;
@@ -101,6 +120,28 @@
       color: var(--muted);
       pointer-events: none;
       white-space: nowrap;
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      z-index: 2;
+    }
+    .theme-toggle-btn:hover {
+      color: var(--text);
+      border-color: var(--line-2);
     }
 
     .dot-close {
@@ -339,7 +380,7 @@
 
     /* Modal terminal bar */
     #m-bar {
-      background: #05080F;
+      background: var(--modal-con);
       border: 1px solid var(--line);
       border-bottom: 0;
       border-radius: 10px 10px 0 0;
@@ -364,7 +405,7 @@
     }
 
     #m-out {
-      background: #05080F;
+      background: var(--modal-con);
       border: 1px solid var(--line);
       border-radius: 0 0 10px 10px;
       padding: 14px;
@@ -374,6 +415,41 @@
       font-size: .8125rem;
       line-height: 1.7;
       color: var(--text);
+    }
+
+    /* Action icon buttons in table */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--muted);
+      background: var(--surface-2);
+      border: 1px solid var(--line-2);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .action-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .action-btn.success {
+      color: var(--ok) !important;
+      border-color: var(--ok) !important;
+      background: rgba(16, 185, 129, 0.12) !important;
+    }
+    .action-btn svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
     }
 
     /* ISP/ASN inline card */
@@ -439,7 +515,7 @@
       #all-table td {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: center;
         gap: 12px;
         padding: 8px 0 !important;
         border-top: 1px solid var(--line) !important;
@@ -519,6 +595,9 @@
         <span class="dot-maximize"></span>
       </div>
       <span class="title mono">bash — SubnetIQ v1.0</span>
+      <button id="theme-btn" type="button" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+        <span id="theme-icon">☀️</span> <span id="theme-text">Light</span>
+      </button>
     </div>
     <div
       style="background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:1.5rem 1.5rem 0.5rem;margin-bottom:2rem;">
@@ -571,8 +650,7 @@
           <section class="panel p-5 sm:p-6" aria-label="Results">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
               <h2 class="text-base font-semibold">Results</h2>
-              <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                <button id="export" type="button" class="btn btn-ghost">Generate MikroTik CLI</button>
+              <div>
                 <button id="copy" type="button" class="btn btn-primary">Copy results</button>
               </div>
             </div>
@@ -605,7 +683,7 @@
 
       <!-- Modal macOS terminal titlebar -->
       <div
-        style="background:#111827;border:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;padding:10px 16px;display:flex;align-items:center;position:relative;">
+        style="background:var(--tb-bg);border:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;padding:10px 16px;display:flex;align-items:center;position:relative;">
         <div style="display:flex;align-items:center;gap:6px;">
           <span class="dot-close"></span>
           <span class="dot-minimize"></span>
@@ -762,7 +840,7 @@
           ipEl.setAttribute('aria-invalid', String(!parsed.quiet));
           msgEl.style.color = parsed.quiet ? 'var(--muted)' : 'var(--err)';
           msgEl.textContent = parsed.msg;
-          copyBtn.disabled = true; exportBtn.disabled = true;
+          copyBtn.disabled = true;
           renderAll(null); ispLookup(null); current = null;
           const ph = ['Network address', 'Broadcast address', 'First usable host', 'Last usable host', 'Total usable hosts', 'Subnet mask', 'Wildcard mask', 'IP class', 'IP type'].map(k => [k, '–']);
           renderResults(ph, true); return;
@@ -771,7 +849,7 @@
         ipEl.setAttribute('aria-invalid', 'false');
         msgEl.style.color = 'var(--ok)';
         msgEl.textContent = 'Valid IPv4 address.';
-        copyBtn.disabled = false; exportBtn.disabled = false;
+        copyBtn.disabled = false;
 
         const out = compute(parsed.octets, cidr);
         current = { ip: parsed.octets.join('.'), cidr, list: out.list, net: out.net, first: out.first };
@@ -790,13 +868,20 @@
         ispLookup(out.type === 'Public' ? parsed.octets.join('.') : null);
       }
 
-      // Copy
+      // Copy helper
       function legacyCopy(t) {
         const ta = document.createElement('textarea');
         ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0';
         document.body.appendChild(ta); ta.select();
         let ok = false; try { ok = document.execCommand('copy'); } catch (e) { }
         document.body.removeChild(ta); return ok;
+      }
+      function copyText(t) {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(t).catch(() => legacyCopy(t));
+          return true;
+        }
+        return legacyCopy(t);
       }
       async function copyResults() {
         if (!current) return;
@@ -813,7 +898,6 @@
       const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
       // All subnets table
-      const exportBtn = $('export');
       const allWrap = $('all-wrap'), allTable = $('all-table'), allTitle = $('all-title'), allSub = $('all-sub');
       let allNets = [];
 
@@ -834,17 +918,54 @@
           else if (cidr === 31) { first = net; last = bc; pool = ''; }
           allNets.push({ net: toDotted(net), cidr, first: toDotted(first), last: toDotted(last), bc: toDotted(bc), pool, hit: ipn >= net && ipn <= bc });
           const hit = ipn >= net && ipn <= bc;
+          const poolDisabled = !pool ? ' disabled style="opacity:0.3;cursor:not-allowed;"' : '';
           rows += '<tr' + (hit ? ' style="background:rgba(239,68,68,.1)"' : '') + '>'
-          +'<td class="' + td + '"' + (hit ? ' style="color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)"' : '')
-          +' data-l="Network">' + toDotted(net) + '</td>'
-          +'<td class="' + td + '" data-l="Usable range">' + toDotted(first) + ' &ndash; ' + toDotted(last) + '</td>'
-          +'<td class="' + td + '" data-l="Broadcast">' + toDotted(bc) + '</td></tr>';
+            + '<td class="' + td + '"' + (hit ? ' style="color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)"' : '')
+            + ' data-l="Network">' + toDotted(net) + '</td>'
+            + '<td class="' + td + '" data-l="Usable range">' + toDotted(first) + ' &ndash; ' + toDotted(last) + '</td>'
+            + '<td class="' + td + '" data-l="Broadcast">' + toDotted(bc) + '</td>'
+            + '<td class="' + td + ' text-right" data-l="Actions">'
+            + '<div class="inline-flex items-center gap-1.5 justify-end">'
+            + '<button type="button" class="action-btn" data-act="cli" data-idx="' + i + '" title="Generate MikroTik CLI command for this subnet"' + poolDisabled + '>'
+            + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>'
+            + '<span>CLI</span>'
+            + '</button>'
+            + '<button type="button" class="action-btn" data-act="pool" data-idx="' + i + '" title="Copy IP pool range (e.g. ' + (pool || 'N/A') + ')"' + poolDisabled + '>'
+            + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
+            + '<span>Pool</span>'
+            + '</button>'
+            + '</div>'
+            + '</td></tr>';
         }
-        allTable.innerHTML = '<table class="w-full min-w-[480px]"><thead><tr>'
-        +['Network address', 'Usable host range', 'Broadcast address'].map(h => '<th>' + h + '</th>').join('')
-        +'</tr></thead><tbody>' + rows + '</tbody></table>';
+        allTable.innerHTML = '<table class="w-full min-w-[560px]"><thead><tr>'
+          + ['Network address', 'Usable host range', 'Broadcast address', '<span class="sr-only">Actions</span>'].map(h => '<th' + (h.includes('sr-only') ? ' class="text-right"' : '') + '>' + h + '</th>').join('')
+          + '</tr></thead><tbody>' + rows + '</tbody></table>';
         allWrap.classList.remove('hidden');
       }
+
+      // Delegate click events for Table Actions (CLI and Pool Copy)
+      allTable.addEventListener('click', (e) => {
+        const btn = e.target.closest('.action-btn');
+        if (!btn || btn.disabled) return;
+        const act = btn.getAttribute('data-act');
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        const sel = allNets[idx];
+        if (!sel) return;
+
+        if (act === 'pool') {
+          if (!sel.pool) return;
+          const ok = copyText(sel.pool);
+          const origHtml = btn.innerHTML;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>';
+          btn.classList.add('success');
+          setTimeout(() => {
+            btn.innerHTML = origHtml;
+            btn.classList.remove('success');
+          }, 1600);
+        } else if (act === 'cli') {
+          openModal(idx);
+        }
+      });
 
       // ISP & ASN lookup
       const ispEl = $('isp');
@@ -916,11 +1037,12 @@
         return esc(l).replace(/(\w+=)(\S+)/g, '<span style="color:var(--muted)">$1</span><span style="color:var(--text)">$2</span>').replace(/^add/, '<span style="color:var(--ok)">add</span>');
       }).join('\n');
 
-      function fillRanges() {
+      function fillRanges(selectedIdx) {
         mRange.innerHTML = '';
         allNets.forEach((n, i) => {
           const o = document.createElement('option');
-          o.value = i; o.selected = n.hit;
+          o.value = i;
+          o.selected = (selectedIdx !== undefined) ? (i === selectedIdx) : n.hit;
           o.textContent = n.net + '/' + n.cidr + (n.pool ? '  (pool ' + n.pool + ')' : '');
           mRange.appendChild(o);
         });
@@ -938,11 +1060,17 @@
       mGen.addEventListener('click', submitCli);
       mName.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCli(); });
 
-      function openModal() {
+      function openModal(specificIdx) {
         lastFocus = document.activeElement;
-        fillRanges(); hideOut(); mErr.textContent = '';
+        fillRanges(specificIdx);
+        hideOut();
+        mErr.textContent = '';
+        if (!mName.value.trim()) {
+          mName.value = 'LAN_Pool';
+        }
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        submitCli();
         mName.focus();
       }
       function closeModal() {
@@ -950,7 +1078,6 @@
         document.body.style.overflow = '';
         if (lastFocus) lastFocus.focus();
       }
-      exportBtn.addEventListener('click', () => openModal());
       $('m-x').addEventListener('click', closeModal);
       $('m-close').addEventListener('click', closeModal);
       modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
@@ -961,6 +1088,31 @@
         if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
         else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
       });
+
+      // Dark / Light Theme Toggle
+      const themeBtn = $('theme-btn'), themeIcon = $('theme-icon'), themeText = $('theme-text');
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          if (themeIcon) themeIcon.textContent = '🌙';
+          if (themeText) themeText.textContent = 'Dark';
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          if (themeIcon) themeIcon.textContent = '☀️';
+          if (themeText) themeText.textContent = 'Light';
+        }
+      }
+      const savedTheme = localStorage.getItem('subnetiq-theme') || 'dark';
+      applyTheme(savedTheme);
+
+      if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+          const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+          const newTheme = isLight ? 'dark' : 'light';
+          localStorage.setItem('subnetiq-theme', newTheme);
+          applyTheme(newTheme);
+        });
+      }
 
       mCopy.addEventListener('click', async () => {
         const text = mOut.textContent;
