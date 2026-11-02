@@ -1,556 +1,508 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>SubnetIQ — Next-Gen IPv4 & VLSM Subnet Intelligence</title>
-  <meta name="description" content="State-of-the-art IPv4 Subnet & VLSM Calculator with real-time binary breakdown, ISP/ASN intelligence, and MikroTik RouterOS script generator.">
+  <title>SubnetIQ — IPv4 Subnet Calculator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
-          },
-          colors: {
-            brand: {
-              50: '#EEF2FF',
-              100: '#E0E7FF',
-              400: '#818CF8',
-              500: '#6366F1',
-              600: '#4F46E5',
-              700: '#4338CA',
-            },
-            cyber: {
-              cyan: '#06B6D4',
-              emerald: '#10B981',
-              amber: '#F59E0B',
-              rose: '#F43F5E',
-              violet: '#8B5CF6'
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #07090E;
-      --card-bg: rgba(15, 23, 42, 0.65);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-border-glow: rgba(99, 102, 241, 0.35);
-      --text-main: #F8FAFC;
-      --text-muted: #94A3B8;
-      --accent: #6366F1;
-      --accent-cyan: #06B6D4;
-      --accent-emerald: #10B981;
-      --accent-amber: #F59E0B;
+      --bg: #090C10;
+      --card: #121720;
+      --card-inner: #0D1117;
+      --border: #212836;
+      --border-focus: #3B82F6;
+      --text: #F3F4F6;
+      --text-muted: #8B949E;
+      --accent: #3B82F6;
+      --accent-hover: #2563EB;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      --radius: 10px;
     }
 
     * {
       box-sizing: border-box;
-      scroll-behavior: smooth;
+      margin: 0;
+      padding: 0;
     }
 
     body {
       background-color: var(--bg);
-      color: var(--text-main);
-      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 50% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
-      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
       min-height: 100vh;
+      display: flex;
+      flex-col: column;
+      padding: 32px 16px;
     }
 
-    /* Ambient grid overlay */
-    .bg-grid {
-      background-size: 32px 32px;
-      background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    .container {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
     }
 
-    /* Glass card */
-    .glass-panel {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .glass-panel:hover {
-      border-color: rgba(255, 255, 255, 0.15);
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    .glass-panel-glow {
-      position: relative;
+    /* Header */
+    header {
+      margin-bottom: 24px;
     }
-    .glass-panel-glow::before {
-      content: '';
-      position: absolute;
-      inset: -1px;
-      border-radius: 17px;
-      padding: 1px;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(6, 182, 212, 0.3), transparent 60%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .brand-icon {
+      background: var(--accent);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .brand h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
     }
 
-    /* Input styling */
-    .input-box {
-      background: rgba(11, 16, 27, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      color: #F8FAFC;
-      transition: all 0.2s ease;
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 18px;
     }
-    .input-box:focus {
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Inputs */
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+    input[type="text"], select {
+      width: 100%;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 9px 12px;
       outline: none;
-      border-color: #6366F1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 0 16px rgba(99, 102, 241, 0.2);
-      background: rgba(15, 23, 42, 0.95);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .input-box.invalid {
-      border-color: #F43F5E;
-      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+    input[type="text"]:focus, select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    input[type="text"].invalid {
+      border-color: var(--error);
     }
 
-    /* Custom range slider */
-    input[type=range] {
+    /* Range Slider */
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .slider-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 26px;
+    }
+    input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 8px;
-      border-radius: 9999px;
-      background: linear-gradient(to right, #6366F1, #06B6D4);
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
       outline: none;
     }
-    input[type=range]::-webkit-slider-thumb {
+    input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: #FFFFFF;
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.8), 0 2px 5px rgba(0,0,0,0.4);
+      background: var(--accent);
       cursor: pointer;
-      border: 2px solid #6366F1;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.15);
-      box-shadow: 0 0 15px rgba(6, 182, 212, 1), 0 2px 8px rgba(0,0,0,0.5);
+      border: 2px solid #fff;
     }
 
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 7px;
-      height: 7px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #090D16;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1E293B;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+    /* Message / Status */
+    #ip-msg {
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 18px;
     }
 
-    /* Glowing Badge */
-    .glow-badge {
-      position: relative;
+    /* Results List */
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
     }
-    .glow-badge::after {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: inherit;
-      background: inherit;
-      filter: blur(6px);
-      opacity: 0.4;
-      z-index: -1;
+    .result-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .result-label {
+      color: var(--text-muted);
+    }
+    .result-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    /* Shimmer animation */
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.9; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(1.08); }
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      background: transparent;
+      color: var(--text);
     }
-    .pulse-glow {
-      animation: pulseGlow 2s infinite ease-in-out;
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    .btn-outline {
+      border-color: var(--border);
+      background: var(--card-inner);
+    }
+    .btn-outline:hover:not(:disabled) {
+      border-color: var(--text-muted);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
     }
 
-    /* Toast */
-    #toast {
-      transform: translateY(100px);
-      opacity: 0;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    /* ISP Box */
+    #isp-box {
+      margin-top: 14px;
+      padding: 12px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.6;
     }
-    #toast.show {
-      transform: translateY(0);
-      opacity: 1;
+    .isp-line {
+      display: flex;
+      justify-content: space-between;
+    }
+    .isp-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .isp-link:hover {
+      text-decoration: underline;
+    }
+
+    /* All Subnets Table */
+    #all-wrap {
+      margin-top: 18px;
+    }
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      max-height: 280px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    th {
+      background: var(--card-inner);
+      color: var(--text-muted);
+      font-weight: 500;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr.active-row {
+      background: rgba(59, 130, 246, 0.12);
+    }
+    tr.active-row td {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 540px;
+      padding: 22px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .close-btn:hover {
+      color: var(--text);
+    }
+    pre.cli-output {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text);
+      overflow-x: auto;
+      max-height: 200px;
+      margin: 14px 0;
+      white-space: pre-wrap;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 16px;
+      }
+      .input-row {
+        flex-direction: column;
+      }
+      .result-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+      }
     }
   </style>
 </head>
-<body class="bg-grid antialiased text-slate-100 flex flex-col min-h-screen">
+<body>
 
-  <!-- Header / Navigation -->
-  <header class="sticky top-0 z-40 backdrop-blur-md bg-[#07090E]/80 border-b border-white/[0.08]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-500 to-cyber-cyan flex items-center justify-center font-mono font-bold text-white text-base shadow-lg shadow-brand-500/25 ring-1 ring-white/20">
-          /IQ
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xl font-bold tracking-tight text-white">Subnet<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-cyber-cyan">IQ</span></span>
-            <span class="px-2 py-0.5 text-[10px] font-mono font-semibold tracking-wider uppercase rounded-full bg-brand-500/15 border border-brand-500/30 text-brand-400">v2.5 Pro</span>
-          </div>
-          <p class="text-xs text-slate-400 hidden sm:block">Modern IPv4 Subnetting & MikroTik CLI Engine</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 sm:gap-3">
-        <a href="https://github.com/jahidhasanemon2211/SubnetIQ" target="_blank" rel="noopener noreferrer" 
-           class="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-white/10 transition-colors">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          <span class="hidden sm:inline">GitHub</span>
-        </a>
-        <button id="top-export-btn" class="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-md shadow-brand-500/20 transition-all active:scale-95">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <span>MikroTik CLI</span>
-        </button>
-      </div>
+<div class="container">
+  
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">/IQ</span>
+      <h1>SubnetIQ</h1>
     </div>
+    <p>Clean &amp; simple IPv4 subnet calculator with MikroTik CLI generator.</p>
   </header>
 
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
-
-    <!-- Top Headline & Description -->
-    <div class="mb-8">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-medium mb-3">
-        <span class="w-2 h-2 rounded-full bg-brand-400 pulse-glow"></span>
-        Zero Latency IPv4 &amp; VLSM Intelligence
-      </div>
-      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
-        High-Performance <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-cyber-cyan to-cyber-emerald">Subnet Calculator</span>
-      </h1>
-      <p class="text-slate-400 mt-2 text-sm sm:text-base max-w-3xl">
-        Calculate network ranges, broadcast domains, binary representations, and usable hosts instantly. Generate MikroTik RouterOS IP pools with a single click.
-      </p>
+  <!-- Input Section -->
+  <section class="card">
+    <div class="card-title">Configuration</div>
+    
+    <div class="form-group">
+      <label for="ip">IPv4 Address</label>
+      <input id="ip" type="text" value="192.168.1.50" placeholder="192.168.1.1" autocomplete="off" spellcheck="false" class="mono">
+      <div id="ip-msg"></div>
     </div>
 
-    <!-- Main Workspace Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-      <!-- LEFT COLUMN: Input & Parameters (5 Cols) -->
-      <div class="lg:col-span-5 flex flex-col gap-6">
-
-        <!-- Calculator Input Card -->
-        <section class="glass-panel glass-panel-glow p-6 shadow-xl" aria-label="Subnet Configuration">
-          <div class="flex items-center justify-between pb-4 border-b border-white/[0.08] mb-5">
-            <h2 class="font-bold text-base text-white flex items-center gap-2">
-              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-              Address Configuration
-            </h2>
-            <button id="quick-clear-btn" type="button" class="text-xs text-slate-400 hover:text-slate-200 transition-colors">Reset</button>
-          </div>
-
-          <!-- IP Input Field -->
-          <div class="mb-5">
-            <div class="flex items-center justify-between mb-2">
-              <label for="ip" class="text-xs font-semibold uppercase tracking-wider text-slate-300">IPv4 Address</label>
-              <span id="ip-badge-container"></span>
-            </div>
-            <div class="relative">
-              <input id="ip" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="192.168.1.50" placeholder="e.g. 192.168.1.1"
-                     class="input-box font-mono w-full px-4 py-3 text-base sm:text-lg tracking-wide placeholder-slate-600">
-              <button id="ip-paste-btn" type="button" title="Paste IP from clipboard" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-              </button>
-            </div>
-            <p id="ip-msg" class="mt-2 text-xs font-medium min-h-[1.25rem] flex items-center gap-1.5" role="alert" aria-live="polite"></p>
-
-            <!-- Quick Presets -->
-            <div class="mt-3 flex flex-wrap gap-1.5 items-center">
-              <span class="text-[11px] font-medium text-slate-500 mr-1">Presets:</span>
-              <button type="button" data-preset="192.168.1.1" class="preset-btn px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800/70 hover:bg-brand-600/30 text-slate-400 hover:text-brand-300 border border-white/5 transition-colors">192.168.1.1</button>
-              <button type="button" data-preset="10.0.0.1" class="preset-btn px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800/70 hover:bg-brand-600/30 text-slate-400 hover:text-brand-300 border border-white/5 transition-colors">10.0.0.1</button>
-              <button type="button" data-preset="172.16.0.1" class="preset-btn px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800/70 hover:bg-brand-600/30 text-slate-400 hover:text-brand-300 border border-white/5 transition-colors">172.16.0.1</button>
-              <button type="button" data-preset="1.1.1.1" class="preset-btn px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800/70 hover:bg-brand-600/30 text-slate-400 hover:text-brand-300 border border-white/5 transition-colors">1.1.1.1 (Cloudflare)</button>
-              <button type="button" data-preset="8.8.8.8" class="preset-btn px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800/70 hover:bg-brand-600/30 text-slate-400 hover:text-brand-300 border border-white/5 transition-colors">8.8.8.8 (Google)</button>
-            </div>
-          </div>
-
-          <!-- Mask & CIDR Controls -->
-          <div class="space-y-4 pt-2">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <label for="mask" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Subnet Mask & Prefix</label>
-                <span id="cidr-display-badge" class="px-2.5 py-0.5 rounded-full font-mono font-bold text-xs bg-brand-500/20 text-brand-300 border border-brand-500/30">/24</span>
-              </div>
-              <select id="mask" class="input-box font-mono w-full px-3.5 py-2.5 text-sm cursor-pointer"></select>
-            </div>
-
-            <!-- Slider Container -->
-            <div class="pt-2">
-              <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
-                <span>/1 (2B hosts)</span>
-                <span class="text-slate-300 font-semibold" id="slider-current-prefix">CIDR: /24</span>
-                <span>/32 (1 host)</span>
-              </div>
-              <input id="cidr" type="range" min="1" max="32" value="24" aria-label="CIDR prefix length">
-              
-              <!-- Quick CIDR Pills -->
-              <div class="grid grid-cols-7 gap-1.5 mt-3">
-                <button type="button" data-cidr="8" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all">/8</button>
-                <button type="button" data-cidr="16" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all">/16</button>
-                <button type="button" data-cidr="24" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-brand-600 text-white border border-brand-400/50 shadow-sm transition-all active-cidr">/24</button>
-                <button type="button" data-cidr="27" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all">/27</button>
-                <button type="button" data-cidr="28" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all">/28</button>
-                <button type="button" data-cidr="29" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all">/29</button>
-                <button type="button" data-cidr="30" class="cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all">/30</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Public ISP Card (Dynamically displayed for public IPs) -->
-          <div id="isp" class="hidden mt-5 rounded-xl p-4 text-xs glass-panel bg-slate-900/90 border border-slate-700/60 shadow-lg" aria-live="polite"></div>
-        </section>
-
-        <!-- Binary & Bit Structure Card -->
-        <section class="glass-panel p-5 shadow-xl">
-          <div class="flex items-center justify-between pb-3 border-b border-white/[0.08] mb-3">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-cyber-cyan"></span>
-              32-Bit Binary Map
-            </h3>
-            <div class="flex items-center gap-3 text-[11px] font-mono">
-              <span class="flex items-center gap-1 text-brand-400"><span class="w-2.5 h-2.5 rounded bg-brand-500 inline-block"></span>Net Bits</span>
-              <span class="flex items-center gap-1 text-cyber-emerald"><span class="w-2.5 h-2.5 rounded bg-cyber-emerald inline-block"></span>Host Bits</span>
-            </div>
-          </div>
-          <div id="binary-viz" class="font-mono text-xs overflow-x-auto py-2"></div>
-        </section>
-
-      </div>
-
-
-      <!-- RIGHT COLUMN: Results & Explorer (7 Cols) -->
-      <div class="lg:col-span-7 flex flex-col gap-6">
-
-        <!-- Quick KPI Metrics 4-Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          <div class="glass-panel p-4 flex flex-col justify-between relative overflow-hidden group">
-            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-brand-500/10 rounded-full blur-xl group-hover:bg-brand-500/20 transition-all"></div>
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Network ID</span>
-            <div id="kpi-net" class="font-mono text-base sm:text-lg font-bold text-white mt-1 break-all">192.168.1.0</div>
-            <span id="kpi-cidr" class="text-[10px] font-mono font-medium text-brand-400 mt-1">/24</span>
-          </div>
-
-          <div class="glass-panel p-4 flex flex-col justify-between relative overflow-hidden group">
-            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-cyber-cyan/10 rounded-full blur-xl group-hover:bg-cyber-cyan/20 transition-all"></div>
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Broadcast</span>
-            <div id="kpi-bc" class="font-mono text-base sm:text-lg font-bold text-cyber-cyan mt-1 break-all">192.168.1.255</div>
-            <span id="kpi-class" class="text-[10px] font-mono font-medium text-slate-400 mt-1">Class C</span>
-          </div>
-
-          <div class="glass-panel p-4 flex flex-col justify-between relative overflow-hidden group">
-            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-cyber-emerald/10 rounded-full blur-xl group-hover:bg-cyber-emerald/20 transition-all"></div>
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Usable Hosts</span>
-            <div id="kpi-hosts" class="font-mono text-base sm:text-lg font-bold text-cyber-emerald mt-1">254</div>
-            <span class="text-[10px] font-mono text-slate-400 mt-1">Capacity</span>
-          </div>
-
-          <div class="glass-panel p-4 flex flex-col justify-between relative overflow-hidden group">
-            <div class="absolute -right-4 -bottom-4 w-16 h-16 bg-cyber-amber/10 rounded-full blur-xl group-hover:bg-cyber-amber/20 transition-all"></div>
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Subnet Mask</span>
-            <div id="kpi-mask" class="font-mono text-xs sm:text-sm font-bold text-cyber-amber mt-1 break-all">255.255.255.0</div>
-            <span class="text-[10px] font-mono text-slate-400 mt-1">IPv4 Mask</span>
-          </div>
-        </div>
-
-        <!-- Main Results Specification Card -->
-        <section class="glass-panel p-5 sm:p-6 shadow-xl" aria-label="Detailed Results">
-          <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08] mb-3">
-            <div>
-              <h2 class="text-base font-bold text-white flex items-center gap-2">
-                <svg class="w-5 h-5 text-cyber-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Subnet Specification
-              </h2>
-              <p class="text-xs text-slate-400">Complete architectural breakdown of the selected IPv4 block</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="copy" type="button" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-sm transition-all active:scale-95">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                <span>Copy Summary</span>
-              </button>
-              <button id="export" type="button" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 transition-all active:scale-95">
-                <svg class="w-3.5 h-3.5 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                <span>MikroTik CLI</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Structured Results Rows -->
-          <dl id="results" class="divide-y divide-white/[0.06] text-sm"></dl>
-        </section>
-
-        <!-- Subnets Explorer / All Networks In Enclosing Block -->
-        <section id="all-wrap" class="glass-panel p-5 sm:p-6 shadow-xl hidden" aria-labelledby="all-title">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-white/[0.08] mb-4">
-            <div>
-              <h2 id="all-title" class="text-base font-bold text-white">All Subnets in Enclosing Block</h2>
-              <p id="all-sub" class="text-xs text-slate-400 mt-0.5"></p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="inline-flex items-center gap-1.5 text-xs text-brand-300 font-medium px-2.5 py-1 rounded-md bg-brand-500/15 border border-brand-500/30">
-                <span class="w-2 h-2 rounded-full bg-brand-400"></span> Current Target Active
-              </span>
-            </div>
-          </div>
-
-          <div id="all-table" class="overflow-x-auto rounded-xl border border-white/[0.08] max-h-96"></div>
-        </section>
-
-      </div>
-
-    </div>
-  </main>
-
-  <!-- Modern Footer -->
-  <footer class="mt-auto border-t border-white/[0.08] bg-[#07090E]/90 py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-      <div class="flex items-center gap-2">
-        <span class="font-bold text-slate-200">SubnetIQ</span>
-        <span>•</span>
-        <span>Handcrafted with precision by <span class="text-slate-200 font-semibold">Md Jahid Hasan Emon</span> &copy; 2026</span>
-      </div>
-      <div class="flex items-center gap-4 font-mono text-[11px]">
-        <a href="https://github.com/jahidhasanemon2211/SubnetIQ" target="_blank" class="hover:text-brand-400 transition-colors">GitHub Repository</a>
-        <span>•</span>
-        <a href="https://bgp.he.net" target="_blank" rel="noopener noreferrer" class="hover:text-cyber-cyan transition-colors">BGP Routing Heuristics</a>
-        <span>•</span>
-        <span class="text-cyber-emerald flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-cyber-emerald"></span>Client-Side Fast Engine</span>
+    <div class="form-group">
+      <label for="mask">Subnet Mask / CIDR</label>
+      <select id="mask" class="mono"></select>
+      <div class="slider-wrap">
+        <span class="slider-label mono">/1</span>
+        <input id="cidr" type="range" min="1" max="32" value="24" aria-label="CIDR slider">
+        <span class="slider-label mono" style="text-align: right;">/32</span>
       </div>
     </div>
+
+    <!-- ISP Box (Shown for public IPs) -->
+    <div id="isp-box" class="hidden"></div>
+  </section>
+
+  <!-- Results Section -->
+  <section class="card">
+    <div class="card-title">
+      <span>Results</span>
+      <span id="type-badge" class="mono" style="font-size: 11px; text-transform: none; color: var(--success);"></span>
+    </div>
+
+    <div id="results"></div>
+
+    <div class="action-bar">
+      <button id="export-btn" type="button" class="btn btn-outline">MikroTik CLI</button>
+      <button id="copy-btn" type="button" class="btn btn-primary">Copy Results</button>
+    </div>
+  </section>
+
+  <!-- All Subnets in Block -->
+  <section id="all-wrap" class="card hidden">
+    <div class="card-title">
+      <span id="all-title">Subnets in Block</span>
+    </div>
+    <div class="table-container">
+      <table id="all-table"></table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    SubnetIQ &bull; Handcrafted by Md Jahid Hasan Emon &bull; 2026
   </footer>
 
-  <!-- MikroTik RouterOS Export Modal -->
-  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-    <div role="dialog" aria-modal="true" aria-labelledby="m-title" class="glass-panel w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-brand-500/30">
-      
-      <!-- Modal Header -->
-      <div class="p-5 sm:p-6 border-b border-white/[0.08] flex items-center justify-between bg-slate-900/50">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-brand-600/20 border border-brand-500/30 flex items-center justify-center text-brand-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          </div>
-          <div>
-            <h2 id="m-title" class="text-base font-bold text-white">Generate MikroTik RouterOS Script</h2>
-            <p class="text-xs text-slate-400">Export production-ready RouterOS CLI commands for IP pools & subnets</p>
-          </div>
-        </div>
-        <button id="m-x" type="button" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" aria-label="Close modal">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
+</div>
 
-      <!-- Modal Body -->
-      <div class="p-5 sm:p-6 overflow-y-auto space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="m-name" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Pool Name</label>
-            <input id="m-name" type="text" maxlength="32" autocomplete="off" spellcheck="false" placeholder="e.g. LAN_DHCP_Pool" class="input-box font-mono w-full px-3.5 py-2.5 text-sm">
-            <p class="text-[11px] text-slate-500 mt-1">Letters, numbers, dashes, underscores</p>
-          </div>
-          <div>
-            <label for="m-range" class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Target IP Range</label>
-            <select id="m-range" class="input-box font-mono w-full px-3.5 py-2.5 text-sm cursor-pointer"></select>
-            <p class="text-[11px] text-slate-500 mt-1">Select from calculated subnets</p>
-          </div>
-        </div>
+<!-- MikroTik Modal -->
+<div id="modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Generate MikroTik CLI</h2>
+      <button id="modal-close-x" class="close-btn">&times;</button>
+    </div>
 
-        <p id="m-err" class="text-xs text-cyber-rose font-medium min-h-[1rem]" role="alert"></p>
+    <div class="form-group">
+      <label for="m-name">Pool Name</label>
+      <input id="m-name" type="text" class="mono" placeholder="LAN_Pool" value="LAN_Pool">
+    </div>
 
-        <!-- RouterOS Mock Terminal -->
-        <div class="rounded-xl overflow-hidden border border-slate-700/80 bg-[#05080F] shadow-inner">
-          <div class="bg-slate-900/90 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <div class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-cyber-rose/80"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-cyber-amber/80"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-cyber-emerald/80"></span>
-              <span class="ml-2 font-mono text-[11px] text-slate-300">admin@MikroTik-RouterOS</span>
-            </div>
-            <span class="text-[11px] font-mono text-slate-500">ROS v6 / v7 CLI</span>
-          </div>
-          <pre id="m-out" class="p-4 font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed max-h-52" tabindex="0"></pre>
-        </div>
-      </div>
+    <div class="form-group">
+      <label for="m-range">Select Range</label>
+      <select id="m-range" class="mono"></select>
+    </div>
 
-      <!-- Modal Footer -->
-      <div class="p-4 sm:p-5 border-t border-white/[0.08] bg-slate-900/60 flex flex-col-reverse sm:flex-row items-center justify-end gap-2">
-        <button id="m-close" type="button" class="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Close</button>
-        <button id="m-copy" type="button" class="w-full sm:w-auto flex items-center justify-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-500/20 transition-all active:scale-95">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          <span id="m-copy-text">Copy Script</span>
-        </button>
-      </div>
+    <pre id="m-cli" class="cli-output"></pre>
 
+    <div class="action-bar">
+      <button id="modal-close-btn" class="btn btn-outline">Close</button>
+      <button id="m-copy-btn" class="btn btn-primary">Copy Script</button>
     </div>
   </div>
-
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900/95 border border-brand-500/40 text-white text-xs font-medium shadow-2xl shadow-brand-500/20 backdrop-blur-md">
-    <div class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-    </div>
-    <span id="toast-msg">Copied to clipboard</span>
-  </div>
+</div>
 
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
   const ipEl = $('ip'), cidrEl = $('cidr'), maskEl = $('mask');
-  const msgEl = $('ip-msg'), resultsEl = $('results'), copyBtn = $('copy');
-  const ipBadgeContainer = $('ip-badge-container');
-  const binaryVizEl = $('binary-viz');
-  const toastEl = $('toast'), toastMsg = $('toast-msg');
-
-  // KPI elements
-  const kpiNet = $('kpi-net'), kpiCidr = $('kpi-cidr'), kpiBc = $('kpi-bc');
-  const kpiClass = $('kpi-class'), kpiHosts = $('kpi-hosts'), kpiMask = $('kpi-mask');
-  const sliderCurrentPrefix = $('slider-current-prefix'), cidrBadge = $('cidr-display-badge');
+  const msgEl = $('ip-msg'), resultsEl = $('results'), typeBadge = $('type-badge');
+  const copyBtn = $('copy-btn'), exportBtn = $('export-btn');
+  const ispBox = $('isp-box');
+  const allWrap = $('all-wrap'), allTitle = $('all-title'), allTable = $('all-table');
 
   const toInt = (o) => (((o[0] << 24) | (o[1] << 16) | (o[2] << 8) | o[3]) >>> 0);
   const toDotted = (n) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
   const maskFor = (c) => (c === 0 ? 0 : (0xFFFFFFFF << (32 - c)) >>> 0);
   const fmt = (n) => n.toLocaleString('en-US');
 
-  // Show Toast
-  let toastTimer = null;
-  function showToast(msg) {
-    toastMsg.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
-  }
-
-  // Populate mask dropdown /1 – /32
+  // Populate mask select
   for (let c = 1; c <= 32; c++) {
     const opt = document.createElement('option');
     opt.value = c;
@@ -559,21 +511,18 @@
   }
   maskEl.value = 24;
 
-  // Friendly IP validation
   function parseIp(raw) {
     const v = raw.trim();
-    if (!v) return { ok: false, msg: 'Enter an IPv4 address, for example 192.168.1.1', quiet: true };
-    if (/[^0-9.]/.test(v)) return { ok: false, msg: 'Only digits and dots are allowed.' };
-    if (/\.\./.test(v) || v.startsWith('.') || v.endsWith('.')) {
-      return { ok: false, msg: v.endsWith('.') && !/\.\./.test(v) ? 'Incomplete: enter another octet after the dot.' : 'Consecutive or trailing dots are invalid.' };
-    }
+    if (!v) return { ok: false, msg: 'Enter an IPv4 address (e.g. 192.168.1.1)' };
+    if (/[^0-9.]/.test(v)) return { ok: false, msg: 'Only numbers and dots allowed' };
     const parts = v.split('.');
-    if (parts.length < 4) return { ok: false, msg: `IPv4 needs 4 octets. Currently: ${parts.length}` };
-    if (parts.length > 4) return { ok: false, msg: 'IPv4 contains only 4 octets. Remove excess numbers.' };
+    if (parts.length !== 4) return { ok: false, msg: 'Must contain exactly 4 octets' };
     for (let i = 0; i < 4; i++) {
       const p = parts[i];
-      if (p.length > 1 && p[0] === '0') return { ok: false, msg: `Octet "${p}" has a leading zero (use ${parseInt(p, 10)}).` };
-      if (p.length > 3 || parseInt(p, 10) > 255) return { ok: false, msg: `Octet "${p}" exceeds 255. Must be 0–255.` };
+      if (p === '' || isNaN(p)) return { ok: false, msg: 'Invalid format' };
+      if (p.length > 1 && p[0] === '0') return { ok: false, msg: `Remove leading zero in "${p}"` };
+      const num = parseInt(p, 10);
+      if (num < 0 || num > 255) return { ok: false, msg: `Octet "${p}" must be 0–255` };
     }
     return { ok: true, octets: parts.map(Number) };
   }
@@ -585,57 +534,17 @@
     if (first < 240) return 'D';
     return 'E';
   }
-  const classNote = {
-    A: 'Unicast, Massive Networks',
-    B: 'Unicast, Medium Networks',
-    C: 'Unicast, Small Networks',
-    D: 'Multicast Streaming',
-    E: 'Reserved / Experimental'
-  };
 
   function ipType(o) {
     const a = o[0], b = o[1];
     if (a === 127) return 'Loopback';
-    if (a === 169 && b === 254) return 'Link-local (APIPA)';
+    if (a === 169 && b === 254) return 'Link-local';
     if (a >= 224 && a <= 239) return 'Multicast';
     if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return 'Private (RFC 1918)';
-    if (a === 0) return 'Reserved (Current Network)';
-    if (a === 100 && b >= 64 && b <= 127) return 'Shared ISP Space (CGNAT)';
-    if (a >= 240) return o.every((x) => x === 255) ? 'Limited Broadcast' : 'Reserved';
+    if (a === 100 && b >= 64 && b <= 127) return 'CGNAT';
+    if (a === 0) return 'Reserved';
+    if (a >= 240) return 'Reserved';
     return 'Public';
-  }
-
-  function toBinaryString(num, bits = 8) {
-    return num.toString(2).padStart(bits, '0');
-  }
-
-  // Render 32-bit binary breakdown with color-coded network & host bits
-  function renderBinaryViz(octets, cidr) {
-    let html = '<div class="flex items-center gap-2 sm:gap-3 flex-wrap">';
-    let bitCounter = 0;
-
-    for (let oIdx = 0; oIdx < 4; oIdx++) {
-      const bin = toBinaryString(octets[oIdx], 8);
-      let octetHtml = '<div class="flex items-center gap-0.5 bg-slate-900/90 p-1.5 rounded-lg border border-white/5">';
-      
-      for (let b = 0; b < 8; b++) {
-        bitCounter++;
-        const isNet = bitCounter <= cidr;
-        const bitVal = bin[b];
-        const colorCls = isNet 
-          ? 'bg-brand-500/20 text-brand-300 border-brand-500/30' 
-          : 'bg-cyber-emerald/15 text-cyber-emerald border-cyber-emerald/25';
-        octetHtml += `<span class="inline-flex items-center justify-center w-5 h-6 rounded text-[11px] font-bold border ${colorCls}">${bitVal}</span>`;
-      }
-      octetHtml += '</div>';
-      html += octetHtml;
-
-      if (oIdx < 3) {
-        html += '<span class="text-slate-600 font-bold text-sm">.</span>';
-      }
-    }
-    html += '</div>';
-    binaryVizEl.innerHTML = html;
   }
 
   function compute(octets, cidr) {
@@ -648,12 +557,9 @@
     if (cidr === 32) { first = last = net; hosts = 1; }
     else if (cidr === 31) { first = net; last = bc; hosts = 2; }
     else { first = net + 1; last = bc - 1; hosts = Math.pow(2, 32 - cidr) - 2; }
+
     const cls = ipClass(octets[0]);
     const type = ipType(octets);
-
-    // Binary mask
-    const binMask = [mask >>> 24, (mask >>> 16) & 255, (mask >>> 8) & 255, mask & 255]
-      .map(b => toBinaryString(b)).join('.');
 
     return {
       net: toDotted(net),
@@ -665,471 +571,189 @@
       wild: toDotted(wild),
       cls: cls,
       type: type,
-      list: [
-        ['Network Address', toDotted(net), 'Base identification of the network segment'],
-        ['Broadcast Address', toDotted(bc), 'Reserved address for packet flooding'],
-        ['First Usable Host', toDotted(first), 'Initial assignable workstation or gateway IP'],
-        ['Last Usable Host', toDotted(last), 'Final assignable device IP'],
-        ['Total Usable Hosts', fmt(hosts), 'Max active nodes excluding Net & BC IDs'],
-        ['Subnet Mask', `${toDotted(mask)} (/${cidr})`, '32-bit network routing bitmask'],
-        ['Wildcard Mask', toDotted(wild), 'Inverted mask used in ACLs & OSPF'],
-        ['Binary Subnet Mask', binMask, 'Raw binary representation'],
-        ['IP Class', `${cls} (${classNote[cls]})`, 'Traditional classful network grouping'],
-        ['Address Type', type, 'RFC 1918 / IANA category designation']
+      items: [
+        ['Network Address', toDotted(net)],
+        ['Broadcast Address', toDotted(bc)],
+        ['Usable Range', `${toDotted(first)}  –  ${toDotted(last)}`],
+        ['Usable Hosts', fmt(hosts)],
+        ['Subnet Mask', `${toDotted(mask)}  (/ ${cidr})`],
+        ['Wildcard Mask', toDotted(wild)],
+        ['IP Class', `Class ${cls}`],
+        ['Address Type', type]
       ]
     };
   }
 
-  function copyTextToClipboard(text, successMsg = 'Copied to clipboard!') {
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(() => showToast(successMsg));
-    } else {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        showToast(successMsg);
-      } catch (e) {
-        showToast('Press Ctrl+C to copy');
-      }
-      document.body.removeChild(ta);
-    }
-  }
-
-  function renderResults(list, dim) {
-    resultsEl.className = 'divide-y divide-white/[0.06] text-sm' + (dim ? ' opacity-40 pointer-events-none' : '');
-    resultsEl.innerHTML = '';
-
-    list.forEach(([k, v, desc]) => {
-      const row = document.createElement('div');
-      row.className = 'py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-white/[0.02] px-2 rounded-lg transition-colors group';
-      
-      const leftCol = document.createElement('div');
-      leftCol.className = 'flex flex-col';
-      
-      const dt = document.createElement('dt');
-      dt.className = 'text-xs font-semibold uppercase tracking-wider text-slate-400 group-hover:text-slate-300 transition-colors';
-      dt.textContent = k;
-
-      if (desc) {
-        const descEl = document.createElement('span');
-        descEl.className = 'text-[11px] text-slate-500 hidden sm:inline-block';
-        descEl.textContent = desc;
-        leftCol.append(dt, descEl);
-      } else {
-        leftCol.appendChild(dt);
-      }
-
-      const rightCol = document.createElement('div');
-      rightCol.className = 'flex items-center gap-2 justify-between sm:justify-end';
-
-      const dd = document.createElement('dd');
-      dd.className = 'font-mono text-sm sm:text-base font-semibold text-white break-all';
-      dd.textContent = v;
-
-      if (k === 'Address Type') {
-        if (v.includes('Private')) {
-          dd.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyber-emerald/15 text-cyber-emerald border border-cyber-emerald/30"><span class="w-1.5 h-1.5 rounded-full bg-cyber-emerald"></span>${v}</span>`;
-        } else if (v === 'Public') {
-          dd.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyber-amber/15 text-cyber-amber border border-cyber-amber/30"><span class="w-1.5 h-1.5 rounded-full bg-cyber-amber"></span>${v}</span>`;
-        }
-      }
-
-      // Individual row copy button
-      const rowCopyBtn = document.createElement('button');
-      rowCopyBtn.type = 'button';
-      rowCopyBtn.title = `Copy ${k}`;
-      rowCopyBtn.className = 'p-1.5 rounded-md text-slate-500 hover:text-white hover:bg-slate-800 transition-colors opacity-80 sm:opacity-0 group-hover:opacity-100';
-      rowCopyBtn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>';
-      rowCopyBtn.addEventListener('click', () => copyTextToClipboard(v, `Copied ${k}!`));
-
-      rightCol.append(dd, rowCopyBtn);
-      row.append(leftCol, rightCol);
-      resultsEl.appendChild(row);
-    });
-  }
-
   let current = null;
+  let allNets = [];
 
   function update() {
     const cidr = parseInt(cidrEl.value, 10);
     maskEl.value = cidr;
-    cidrBadge.textContent = `/${cidr}`;
-    sliderCurrentPrefix.textContent = `CIDR: /${cidr}`;
-
-    // Update active CIDR pill
-    document.querySelectorAll('.cidr-btn').forEach(btn => {
-      if (parseInt(btn.dataset.cidr, 10) === cidr) {
-        btn.className = 'cidr-btn py-1 rounded text-xs font-mono font-semibold bg-brand-600 text-white border border-brand-400/50 shadow-sm transition-all active-cidr';
-      } else {
-        btn.className = 'cidr-btn py-1 rounded text-xs font-mono font-semibold bg-slate-800/80 hover:bg-brand-600 text-slate-300 hover:text-white border border-white/5 transition-all';
-      }
-    });
 
     const parsed = parseIp(ipEl.value);
-
     if (!parsed.ok) {
-      ipEl.classList.toggle('invalid', !parsed.quiet);
-      ipBadgeContainer.innerHTML = '';
-      msgEl.className = 'mt-2 text-xs font-medium min-h-[1.25rem] flex items-center gap-1.5 text-cyber-rose';
-      msgEl.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>${parsed.msg}</span>`;
+      ipEl.classList.add('invalid');
+      msgEl.style.color = 'var(--error)';
+      msgEl.textContent = parsed.msg;
+      typeBadge.textContent = '';
       copyBtn.disabled = true;
       exportBtn.disabled = true;
-      renderAll(null);
-      ispLookup(null);
+      resultsEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Enter a valid IP address to calculate.</div>';
+      allWrap.classList.add('hidden');
+      ispBox.classList.add('hidden');
       current = null;
-      
-      kpiNet.textContent = '—';
-      kpiBc.textContent = '—';
-      kpiHosts.textContent = '—';
-      kpiMask.textContent = '—';
-      binaryVizEl.innerHTML = '<span class="text-slate-500 text-xs">Waiting for valid IPv4 address...</span>';
-
-      const placeholder = [
-        ['Network Address', '—'],
-        ['Broadcast Address', '—'],
-        ['First Usable Host', '—'],
-        ['Last Usable Host', '—'],
-        ['Total Usable Hosts', '—'],
-        ['Subnet Mask', '—'],
-        ['Wildcard Mask', '—'],
-        ['Binary Subnet Mask', '—'],
-        ['IP Class', '—'],
-        ['Address Type', '—']
-      ];
-      renderResults(placeholder, true);
       return;
     }
 
     ipEl.classList.remove('invalid');
-    msgEl.className = 'mt-2 text-xs font-medium min-h-[1.25rem] flex items-center gap-1.5 text-cyber-emerald';
-    msgEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Valid IPv4 Address</span>';
+    msgEl.style.color = 'var(--success)';
+    msgEl.textContent = 'Valid IPv4 Address';
     copyBtn.disabled = false;
     exportBtn.disabled = false;
 
     const out = compute(parsed.octets, cidr);
-    current = { ip: parsed.octets.join('.'), cidr, list: out.list, net: out.net, first: out.first, hosts: out.hosts, mask: out.mask };
+    current = { ip: parsed.octets.join('.'), cidr, items: out.items, net: out.net, first: out.first, last: out.last, hosts: out.hosts };
 
-    // Update KPIs
-    kpiNet.textContent = out.net;
-    kpiCidr.textContent = `/${cidr}`;
-    kpiBc.textContent = out.bc;
-    kpiClass.textContent = `Class ${out.cls}`;
-    kpiHosts.textContent = fmt(out.hosts);
-    kpiMask.textContent = out.mask;
+    typeBadge.textContent = out.type;
+    typeBadge.style.color = out.type.includes('Private') ? 'var(--success)' : (out.type === 'Public' ? 'var(--warning)' : 'var(--text-muted)');
 
-    // Type Badge in Input Header
-    if (out.type.includes('Private')) {
-      ipBadgeContainer.innerHTML = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyber-emerald/15 text-cyber-emerald border border-cyber-emerald/30">Private LAN</span>';
-    } else if (out.type === 'Public') {
-      ipBadgeContainer.innerHTML = '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyber-amber/15 text-cyber-amber border border-cyber-amber/30">Public WAN</span>';
-    } else {
-      ipBadgeContainer.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-slate-300 border border-white/10">${out.type}</span>`;
-    }
+    // Render results
+    resultsEl.innerHTML = out.items.map(([label, val]) => `
+      <div class="result-row">
+        <span class="result-label">${label}</span>
+        <span class="result-val">${val}</span>
+      </div>
+    `).join('');
 
-    renderBinaryViz(parsed.octets, cidr);
-    renderResults(out.list, false);
     renderAll(parsed.octets, cidr);
     ispLookup(out.type === 'Public' ? parsed.octets.join('.') : null);
   }
 
-  // Copy full summary
-  async function copyResults() {
-    if (!current) return;
-    const text = [
-      `=========================================`,
-      `SubnetIQ IPv4 Summary: ${current.ip}/${current.cidr}`,
-      `=========================================`,
-      ...current.list.map(([k, v]) => `${k.padEnd(20)}: ${v}`)
-    ].join('\n');
-    copyTextToClipboard(text, 'Full subnet summary copied!');
-  }
-
-  const exportBtn = $('export'), topExportBtn = $('top-export-btn');
-  const allWrap = $('all-wrap'), allTable = $('all-table'), allTitle = $('all-title'), allSub = $('all-sub');
-  let allNets = [];
-
-  // All networks within enclosing boundary (/8, /16, /24)
   function renderAll(o, cidr) {
-    if (!o) { allNets = []; allWrap.classList.add('hidden'); return; }
     const pb = Math.floor((cidr - 1) / 8) * 8;
     const count = Math.pow(2, cidr - pb);
     const size = Math.pow(2, 32 - cidr);
     const ipn = toInt(o);
     const base = (ipn & maskFor(pb)) >>> 0;
     const pat = [0, 1, 2, 3].map((i) => (i < pb / 8 ? o[i] : '*')).join('.');
-    
-    allTitle.textContent = `All ${fmt(count)} /${cidr} Networks in ${pat}`;
-    allSub.textContent = `Highlighted row contains active IP ${o.join('.')}`;
 
-    let rows = ''; allNets = [];
+    allTitle.textContent = `All /${cidr} Subnets in ${pat}`;
+    allNets = [];
+
+    let rows = '';
     for (let i = 0; i < count; i++) {
       const net = base + i * size, bc = net + size - 1;
       let first = net + 1, last = bc - 1, pool = `${toDotted(first + 1)}-${toDotted(last)}`;
       if (cidr === 32) { first = last = net; pool = ''; }
       else if (cidr === 31) { first = net; last = bc; pool = ''; }
-      
+
       const hit = ipn >= net && ipn <= bc;
       allNets.push({ net: toDotted(net), cidr, first: toDotted(first), last: toDotted(last), bc: toDotted(bc), pool, hit });
 
-      const rowBg = hit ? 'bg-brand-500/15 border-l-4 border-l-brand-400' : 'hover:bg-white/[0.02]';
-      const netColor = hit ? 'text-brand-300 font-bold' : 'text-slate-200';
-
       rows += `
-        <tr class="${rowBg} border-b border-white/[0.05] transition-colors">
-          <td class="px-3.5 py-2.5 font-mono text-xs ${netColor}">${toDotted(net)}/${cidr}</td>
-          <td class="px-3.5 py-2.5 font-mono text-xs text-slate-300">${toDotted(first)} &ndash; ${toDotted(last)}</td>
-          <td class="px-3.5 py-2.5 font-mono text-xs text-slate-400">${toDotted(bc)}</td>
-          <td class="px-3.5 py-2.5 text-right font-mono text-xs">
-            ${hit ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">Active</span>' : ''}
-          </td>
+        <tr class="${hit ? 'active-row' : ''}">
+          <td>${toDotted(net)}/${cidr}</td>
+          <td>${toDotted(first)} – ${toDotted(last)}</td>
+          <td>${toDotted(bc)}</td>
         </tr>`;
     }
 
     allTable.innerHTML = `
-      <table class="w-full text-left border-collapse">
-        <thead class="sticky top-0 bg-slate-900/95 backdrop-blur-sm border-b border-white/[0.08] text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-          <tr>
-            <th class="px-3.5 py-2.5">Subnet Range</th>
-            <th class="px-3.5 py-2.5">Usable Host Range</th>
-            <th class="px-3.5 py-2.5">Broadcast</th>
-            <th class="px-3.5 py-2.5 text-right">Status</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/[0.04]">${rows}</tbody>
-      </table>`;
+      <thead>
+        <tr>
+          <th>Subnet</th>
+          <th>Usable Range</th>
+          <th>Broadcast</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>`;
     allWrap.classList.remove('hidden');
   }
 
-  // ISP & ASN Intelligence Lookup
-  const ispEl = $('isp');
-  let ispTimer = null, ispCtl = null, ispLast = '';
-  const ispCache = {};
-
-  const ispShow = (html) => { ispEl.innerHTML = html; ispEl.classList.remove('hidden'); };
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-  function ispRender(d) {
-    const c = d.connection || {};
-    const org = c.isp || c.org || d.org || 'Unknown Provider';
-    const asn = c.asn ? `AS${c.asn}` : (d.asn || 'N/A');
-    const loc = [d.city, d.country || d.country_name].filter(Boolean).join(', ') + (d.country_code ? ` (${d.country_code})` : '');
-    const bgpLink = `https://bgp.he.net/ip/${encodeURIComponent(ispLast)}`;
-
-    ispShow(`
-      <div class="space-y-2">
-        <div class="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cyber-amber pulse-glow"></span>
-            <span class="font-bold text-slate-200">Public IP Intelligence</span>
-          </div>
-          <a href="${bgpLink}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-brand-400 hover:text-brand-300 underline font-mono flex items-center gap-1">
-            bgp.he.net
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-          </a>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-[11px]">
-          <div><span class="text-slate-400">ISP / AS Org:</span> <span class="font-medium text-white">${esc(org)}</span></div>
-          <div><span class="text-slate-400">ASN:</span> <span class="font-mono text-cyber-cyan">${esc(asn)}</span></div>
-          ${loc ? `<div class="col-span-2"><span class="text-slate-400">Location:</span> <span class="text-slate-300 font-mono">${esc(loc)}</span></div>` : ''}
-          ${d.prefix ? `<div class="col-span-2"><span class="text-slate-400">BGP Route:</span> <span class="font-mono text-brand-400">${esc(d.prefix)}</span></div>` : ''}
-        </div>
-      </div>
-    `);
-  }
-
+  // ISP Lookup
+  let ispTimer = null;
   function ispLookup(ip) {
     if (!ip) {
       clearTimeout(ispTimer);
-      if (ispCtl) { ispCtl.abort(); ispCtl = null; }
-      ispLast = ''; ispEl.classList.add('hidden'); ispEl.innerHTML = '';
+      ispBox.classList.add('hidden');
       return;
     }
-    if (ip === ispLast) return;
-    ispLast = ip;
+    ispBox.innerHTML = '<span style="color:var(--text-muted);">Fetching ISP info...</span>';
+    ispBox.classList.remove('hidden');
+
     clearTimeout(ispTimer);
-    if (ispCtl) { ispCtl.abort(); ispCtl = null; }
-    if (ispCache[ip]) { ispRender(ispCache[ip]); return; }
-
-    ispShow(`
-      <div class="flex items-center gap-2 text-slate-400 py-1">
-        <span class="w-2 h-2 rounded-full bg-brand-400 pulse-glow"></span>
-        <span>Looking up ASN &amp; ISP heuristics...</span>
-      </div>
-    `);
-
     ispTimer = setTimeout(async () => {
-      const ctl = new AbortController();
-      ispCtl = ctl;
-      const timeout = setTimeout(() => ctl.abort(), 8000);
       try {
-        let pd = null;
-        try {
-          const pr = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, { signal: ctl.signal });
-          if (pr.ok) { const pj = await pr.json(); if (pj && pj.success !== false) pd = pj; }
-        } catch (e) { if (ctl.signal.aborted) throw e; }
-        
-        if (pd) { ispCache[ip] = pd; ispRender(pd); return; }
-
-        try {
-          const rr = await fetch(`https://stat.ripe.net/data/prefix-overview/data.json?resource=${encodeURIComponent(ip)}`, { signal: ctl.signal });
-          if (rr.ok) {
-            const rj = await rr.json();
-            const a = rj?.data?.asns?.[0];
-            if (a) {
-              const rd = { connection: { asn: a.asn, isp: a.holder }, prefix: rj.data.resource };
-              ispCache[ip] = rd; ispRender(rd); return;
-            }
-          }
-        } catch (e) { if (ctl.signal.aborted) throw e; }
-
-        const r = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, { signal: ctl.signal });
-        if (r.ok) {
-          const d = await r.json();
-          if (d && !d.error) { ispCache[ip] = d; ispRender(d); return; }
+        const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`);
+        const d = await res.json();
+        if (d && d.success !== false) {
+          const org = d.connection?.isp || d.connection?.org || 'Unknown';
+          const asn = d.connection?.asn ? `AS${d.connection.asn}` : 'N/A';
+          const loc = [d.city, d.country].filter(Boolean).join(', ');
+          ispBox.innerHTML = `
+            <div class="isp-line"><span>ISP / Org:</span> <strong>${org}</strong></div>
+            <div class="isp-line"><span>ASN &amp; Location:</span> <span>${asn} &bull; ${loc}</span></div>
+            <div class="isp-line" style="margin-top:4px;"><a href="https://bgp.he.net/ip/${ip}" target="_blank" class="isp-link">View BGP details on bgp.he.net &rarr;</a></div>
+          `;
+          return;
         }
-      } catch (e) {
-        // Silent fail
-      } finally {
-        clearTimeout(timeout);
-        if (ispCtl === ctl) ispCtl = null;
-      }
-    }, 500);
+      } catch (e) {}
+      ispBox.innerHTML = `<span>ISP data unavailable.</span> <a href="https://bgp.he.net/ip/${ip}" target="_blank" class="isp-link">Check bgp.he.net</a>`;
+    }, 400);
   }
 
-  // MikroTik Export Modal Logic
-  const modal = $('modal'), mOut = $('m-out'), mCopy = $('m-copy');
-  const mName = $('m-name'), mRange = $('m-range'), mErr = $('m-err');
-  let lastFocus = null;
-
-  function buildCli() {
-    if (!current) return '# Please specify a valid IPv4 address first.';
-    const name = mName.value.trim().replace(/\s+/g, '_').replace(/[^\w.\-]/g, '') || 'DHCP_POOL';
-    const sel = allNets[parseInt(mRange.value, 10)];
-    if (!sel) return '# No subnet range selected.';
-    if (!sel.pool) return `# Note: /${sel.cidr} prefix does not contain assignable client addresses.`;
-
-    return [
-      `# ========================================================`,
-      `# MikroTik RouterOS Script generated by SubnetIQ`,
-      `# Network: ${sel.net}/${sel.cidr} | Broadcast: ${sel.bc}`,
-      `# ========================================================`,
-      ``,
-      `/ip pool`,
-      `add name=${name} ranges=${sel.pool}`,
-      ``,
-      `# DHCP Server Network definition`,
-      `/ip dhcp-server network`,
-      `add address=${sel.net}/${sel.cidr} gateway=${sel.first} dns-server=${sel.first}`
-    ].join('\n');
-  }
-
-  function highlightRos(script) {
-    return script.split('\n').map(line => {
-      if (line.startsWith('#')) return `<span class="text-slate-500">${esc(line)}</span>`;
-      if (line.startsWith('/')) return `<span class="text-brand-400 font-bold">${esc(line)}</span>`;
-      return esc(line)
-        .replace(/^add /, '<span class="text-cyber-emerald font-semibold">add </span>')
-        .replace(/(\w+=)([\w.\-]+)/g, '<span class="text-slate-400">$1</span><span class="text-cyber-cyan">$2</span>');
-    }).join('\n');
-  }
-
-  function fillRanges() {
-    mRange.innerHTML = '';
-    allNets.forEach((n, i) => {
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.selected = n.hit;
-      opt.textContent = `${n.net}/${n.cidr} ${n.pool ? `(Pool: ${n.pool})` : '(No Pool)'}`;
-      mRange.appendChild(opt);
+  // Copy
+  function copyText(str, btn, normalTxt) {
+    navigator.clipboard.writeText(str).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = normalTxt; }, 1500);
     });
   }
 
-  function refreshCli() {
-    mErr.textContent = '';
-    mOut.innerHTML = highlightRos(buildCli());
-  }
-
-  function openModal() {
-    lastFocus = document.activeElement;
-    fillRanges();
-    if (!mName.value.trim()) mName.value = 'LAN_POOL_1';
-    refreshCli();
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    mName.focus();
-  }
-
-  function closeModal() {
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-    if (lastFocus) lastFocus.focus();
-  }
-
-  // Event Listeners
-  exportBtn.addEventListener('click', openModal);
-  topExportBtn.addEventListener('click', openModal);
-  $('m-x').addEventListener('click', closeModal);
-  $('m-close').addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-  modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-  mName.addEventListener('input', refreshCli);
-  mRange.addEventListener('change', refreshCli);
-
-  mCopy.addEventListener('click', () => {
-    copyTextToClipboard(buildCli(), 'MikroTik RouterOS script copied!');
+  copyBtn.addEventListener('click', () => {
+    if (!current) return;
+    const txt = current.items.map(([k, v]) => `${k}: ${v}`).join('\n');
+    copyText(txt, copyBtn, 'Copy Results');
   });
 
+  // Modal
+  const modal = $('modal'), mName = $('m-name'), mRange = $('m-range'), mCli = $('m-cli'), mCopyBtn = $('m-copy-btn');
+
+  function renderCli() {
+    const name = mName.value.trim() || 'LAN_Pool';
+    const sel = allNets[parseInt(mRange.value, 10)];
+    if (!sel || !sel.pool) {
+      mCli.textContent = '# No pool available for this prefix size';
+      return;
+    }
+    mCli.textContent = `/ip pool\nadd name=${name} ranges=${sel.pool}\n\n/ip dhcp-server network\nadd address=${sel.net}/${sel.cidr} gateway=${sel.first}`;
+  }
+
+  exportBtn.addEventListener('click', () => {
+    mRange.innerHTML = '';
+    allNets.forEach((n, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.selected = n.hit;
+      opt.textContent = `${n.net}/${n.cidr} ${n.pool ? `(Pool: ${n.pool})` : ''}`;
+      mRange.appendChild(opt);
+    });
+    renderCli();
+    modal.classList.remove('hidden');
+  });
+
+  $('modal-close-x').addEventListener('click', () => modal.classList.add('hidden'));
+  $('modal-close-btn').addEventListener('click', () => modal.classList.add('hidden'));
+  mName.addEventListener('input', renderCli);
+  mRange.addEventListener('change', renderCli);
+  mCopyBtn.addEventListener('click', () => copyText(mCli.textContent, mCopyBtn, 'Copy Script'));
+
+  // Inputs
   ipEl.addEventListener('input', update);
   cidrEl.addEventListener('input', update);
   maskEl.addEventListener('change', () => { cidrEl.value = maskEl.value; update(); });
-  copyBtn.addEventListener('click', copyResults);
 
-  // Quick Preset buttons
-  document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      ipEl.value = btn.dataset.preset;
-      update();
-    });
-  });
-
-  // Quick CIDR pills
-  document.querySelectorAll('.cidr-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      cidrEl.value = btn.dataset.cidr;
-      update();
-    });
-  });
-
-  // Reset button
-  $('quick-clear-btn').addEventListener('click', () => {
-    ipEl.value = '192.168.1.1';
-    cidrEl.value = 24;
-    update();
-  });
-
-  // Paste from clipboard button
-  $('ip-paste-btn').addEventListener('click', async () => {
-    try {
-      if (navigator.clipboard) {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          ipEl.value = text.trim();
-          update();
-          showToast('Pasted from clipboard!');
-        }
-      }
-    } catch (e) {
-      ipEl.focus();
-    }
-  });
-
-  // Initial calculation
   update();
 })();
 </script>
