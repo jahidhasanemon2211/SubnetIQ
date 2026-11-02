@@ -1572,16 +1572,7 @@
         return poolCmd + '\nadd name=' + name + ' ranges=' + range;
       }
 
-      const hideOut = () => { mOut.classList.add('hidden'); mCopy.classList.add('hidden'); bar.classList.add('hidden'); };
-      
-      const hl = (t) => t.split('\n').map(l => {
-        if (l[0] === '#') return '<span style="color:var(--muted)">' + esc(l) + '</span>';
-        if (l[0] === '/') return '<span style="color:var(--accent);font-weight:600">' + esc(l) + '</span>';
-        return esc(l)
-          .replace(/(\w+)=([^"\s]+)/g, '<span style="color:var(--muted)">$1=</span><span style="color:var(--text)">$2</span>')
-          .replace(/(\w+)="([^"]*)"/g, '<span style="color:var(--muted)">$1=</span><span style="color:var(--ok)">"$2"</span>')
-          .replace(/^add\b/, '<span style="color:var(--ok);font-weight:600">add</span>');
-      }).join('\n');
+      const hideOut = () => { mOut.textContent = ''; mOut.classList.add('hidden'); mCopy.classList.add('hidden'); bar.classList.add('hidden'); };
 
       function fillRanges(selectedIdx) {
         mRange.innerHTML = '';
@@ -1600,7 +1591,7 @@
         if (!mName.value.trim().replace(/[^\w.\-]/g, '')) { mErr.textContent = 'Enter a valid pool name using letters, numbers, underscores or hyphens.'; hideOut(); return; }
         const cliText = buildCli();
         if (!cliText) { mErr.textContent = 'Unable to generate pool command for this subnet.'; hideOut(); return; }
-        mOut.innerHTML = hl(cliText);
+        mOut.textContent = cliText;
         mOut.classList.remove('hidden');
         mCopy.classList.remove('hidden');
         bar.classList.remove('hidden');
