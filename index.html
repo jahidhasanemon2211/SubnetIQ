@@ -17,6 +17,8 @@
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; }
@@ -50,19 +52,44 @@
   #m-out { background: #05080F; border: 1px solid var(--line); border-radius: 0 0 10px 10px; padding: 14px; overflow: auto; max-height: 40vh; white-space: pre; font-size: .85rem; line-height: 1.7; color: var(--text); }
   .isp-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--net); margin-right: 8px; animation: ispPulse 1s ease-in-out infinite; }
   @keyframes ispPulse { 50% { opacity: .25; } }
+  /* Mobile (under 640px): stacked rows, card list instead of table */
+  @media (max-width: 639px) {
+    #results .row { flex-direction: column; align-items: flex-start; gap: 2px; }
+    #results .row dd { text-align: left; }
+    #all-table { border: 0; border-radius: 0; overflow: visible; }
+    #all-table table { display: block; min-width: 0 !important; }
+    #all-table thead { display: none; }
+    #all-table tbody { display: grid; gap: 10px; }
+    #all-table tr { display: block; padding: 2px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--input); }
+    #all-table tr[style] { border-color: var(--net); }
+    #all-table td { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0 !important; border-top: 1px solid var(--line) !important; white-space: normal !important; text-align: right; box-shadow: none !important; }
+    #all-table td:first-child { border-top: 0 !important; }
+    #all-table td::before { content: attr(data-l); flex: none; color: var(--muted); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+  }
+  /* Tablet (640px to 1023px): results as a 2-column card grid */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    #results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    #results .row { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--input); }
+    #results .row dd { text-align: left; }
+    #results .row:last-child { grid-column: 1 / -1; }
+  }
+  /* Touch devices: larger tap targets */
+  @media (pointer: coarse) { .btn { min-height: 44px; } input[type=range] { height: 28px; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body class="min-h-screen">
-<main class="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
+<main class="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10 lg:max-w-6xl lg:px-8 lg:py-12">
   <header class="mb-8">
     <h1 class="flex items-center gap-3 text-2xl sm:text-3xl font-semibold tracking-tight"><span class="mono inline-flex items-center justify-center rounded-lg text-sm font-semibold" style="width:2.25rem;height:2.25rem;background:#EF4444;color:#fff" aria-hidden="true">/24</span>SubnetIQ</h1>
     <p class="mt-2 text-sm" style="color:var(--muted)">IPv4 subnet calculator with a MikroTik IP pool generator. Enter an address and pick a prefix length to see the network range, masks and usable hosts.</p>
   </header>
 
+  <div class="grid gap-5 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-6 lg:items-start xl:grid-cols-[minmax(0,27rem)_minmax(0,1fr)]">
+  <div class="grid gap-5">
   <!-- Inputs -->
-  <section class="panel p-5 sm:p-6 mb-5">
-    <div class="grid gap-5 sm:grid-cols-2">
+  <section class="panel p-5 sm:p-6">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
       <div>
         <label for="ip" class="block text-sm font-medium mb-2">IPv4 address</label>
         <input id="ip" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="192.168.1.50" placeholder="192.168.1.50"
@@ -86,20 +113,23 @@
   <section class="panel p-5 sm:p-6" aria-label="Results">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
       <h2 class="text-base font-semibold">Results</h2>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
         <button id="export" type="button" class="btn btn-ghost text-sm">Generate MikroTik CLI</button>
         <button id="copy" type="button" class="btn btn-primary text-sm">Copy results</button>
       </div>
     </div>
     <dl id="results" class="mt-2"></dl>
   </section>
+  </div>
+
   <!-- All networks -->
-  <section id="all-wrap" class="panel p-5 sm:p-6 mt-5 hidden" aria-labelledby="all-title">
+  <section id="all-wrap" class="panel p-5 sm:p-6 hidden" aria-labelledby="all-title">
     <h2 id="all-title" class="text-base font-semibold"></h2>
     <p id="all-sub" class="text-sm mt-1" style="color:var(--muted)"></p>
     <div id="all-table" class="mt-4 overflow-x-auto"></div>
   </section>
-<footer class="mt-10 text-center text-sm" style="color:var(--muted)">Handcrafted with ❤️ by Md Jahid Hasan Emon &copy; 2026</footer>
+</div>
+  <footer class="mt-10 text-center text-sm" style="color:var(--muted)">Handcrafted with ❤️ by Md Jahid Hasan Emon &copy; 2026</footer>
 </main>
 
 <!-- MikroTik export modal -->
@@ -123,10 +153,10 @@
       </div>
     </div>
     <p id="m-err" class="mt-3 text-sm min-h-[1.25rem]" role="alert" style="color:var(--err)"></p>
-    <button id="m-gen" type="button" class="btn btn-primary text-sm">Submit</button>
+    <button id="m-gen" type="button" class="btn btn-primary text-sm w-full sm:w-auto">Submit</button>
     <div id="m-bar" class="hidden flex items-center gap-1.5 mono mt-4"><i style="background:#EF4444"></i><i style="background:#F59E0B"></i><i style="background:#10B981"></i><span>RouterOS terminal</span></div>
     <pre id="m-out" class="mono hidden" tabindex="0" aria-label="RouterOS commands"></pre>
-    <div class="flex flex-wrap justify-end gap-2 mt-4">
+    <div class="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
       <button id="m-close" type="button" class="btn btn-ghost text-sm">Close</button>
       <button id="m-copy" type="button" class="btn btn-primary text-sm hidden">Copy to Clipboard</button>
     </div>
@@ -341,13 +371,13 @@
       allNets.push({ net: toDotted(net), cidr: cidr, first: toDotted(first), last: toDotted(last), bc: toDotted(bc), pool: pool, hit: ipn >= net && ipn <= bc });
       const hit = ipn >= net && ipn <= bc;
       rows += '<tr' + (hit ? ' style="background:var(--surface-2)"' : '') + '>' +
-        '<td class="' + td + '"' + (hit ? ' style="color:var(--net);box-shadow:inset 3px 0 0 var(--net)"' : '') + '>' + toDotted(net) + '</td>' +
-        '<td class="' + td + '">' + toDotted(first) + ' &ndash; ' + toDotted(last) + '</td>' +
+        '<td class="' + td + '"' + (hit ? ' style="color:var(--net);box-shadow:inset 3px 0 0 var(--net)"' : '') + ' data-l="Network address">' + toDotted(net) + '</td>' +
+        '<td class="' + td + '" data-l="Usable host range">' + toDotted(first) + ' &ndash; ' + toDotted(last) + '</td>' +
         
-        '<td class="' + td + '">' + toDotted(bc) + '</td></tr>';
+        '<td class="' + td + '" data-l="Broadcast address">' + toDotted(bc) + '</td></tr>';
     }
     const heads = ['Network address', 'Usable host range', 'Broadcast address'];
-    allTable.innerHTML = '<table class="w-full text-sm min-w-[640px]"><thead><tr>' +
+    allTable.innerHTML = '<table class="w-full text-sm min-w-[560px]"><thead><tr>' +
       heads.map((h) => '<th class="text-left font-medium px-3 py-2" style="color:var(--muted)">' + h + '</th>').join('') +
       '</tr></thead><tbody>' + rows + '</tbody></table>';
     allWrap.classList.remove('hidden');
