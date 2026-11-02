@@ -1,489 +1,324 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>SubnetIQ — IPv4 Subnet Calculator</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #090C10;
-      --card: #121720;
-      --card-inner: #0D1117;
-      --border: #212836;
-      --border-focus: #3B82F6;
-      --text: #F3F4F6;
-      --text-muted: #8B949E;
-      --accent: #3B82F6;
-      --accent-hover: #2563EB;
-      --success: #10B981;
-      --warning: #F59E0B;
-      --error: #EF4444;
-      --radius: 10px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SubnetIQ | IPv4 Subnet Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+  :root {
+    color-scheme: dark;
+    /* macOS-inspired palette */
+    --bg:       #141416;
+    --surface:  #1C1C1E;
+    --surface-2:#232325;
+    --input:    #111113;
+    --line:     #2C2C2E;
+    --line-2:   #38383A;
+    --text:     #F5F5F7;
+    --muted:    #8E8E93;
+    --accent:   #0A84FF;   /* macOS Blue */
+    --accent-h: #0071E3;
+    --ok:       #30D158;   /* macOS Green */
+    --warn:     #FF9F0A;   /* macOS Amber */
+    --err:      #FF453A;   /* macOS Red */
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'IBM Plex Sans', BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(10,132,255,.35); }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  .mono { font-family: 'IBM Plex Mono', 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.5;
-      min-height: 100vh;
-      display: flex;
-      flex-col: column;
-      padding: 32px 16px;
-    }
+  /* macOS vibrancy panel */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    /* subtle inner highlight at top — mimics macOS light catch */
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      0 1px 3px rgba(0,0,0,.35),
+      0 4px 12px rgba(0,0,0,.2);
+  }
 
-    .container {
-      width: 100%;
-      max-width: 680px;
-      margin: 0 auto;
-    }
+  /* macOS-style text field */
+  .field {
+    background: var(--input);
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    color: var(--text);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.3);
+  }
+  .field::placeholder { color: var(--muted); opacity: 1; }
+  .field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(10,132,255,.3), inset 0 1px 3px rgba(0,0,0,.2);
+  }
+  .field.invalid {
+    border-color: var(--err);
+    box-shadow: 0 0 0 3px rgba(255,69,58,.25), inset 0 1px 3px rgba(0,0,0,.2);
+  }
 
-    .mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
+  /* macOS-style slider — blue track + round white thumb */
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--line-2);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.2);
+    cursor: pointer;
+    transition: transform .1s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.08); }
+  input[type=range]::-webkit-slider-thumb:active { transform: scale(0.95); }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.55);
+    cursor: pointer;
+  }
 
-    /* Header */
-    header {
-      margin-bottom: 24px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    .brand-icon {
-      background: var(--accent);
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 6px;
-    }
-    .brand h1 {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.02em;
-    }
-    header p {
-      color: var(--text-muted);
-      font-size: 14px;
-    }
+  /* Row layout for result key-values */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: 0; }
 
-    /* Cards */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px;
-      margin-bottom: 18px;
-    }
+  /* macOS-style buttons */
+  .btn {
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: .875rem;
+    font-weight: 500;
+    letter-spacing: -.01em;
+    transition: filter .15s ease, transform .08s ease, box-shadow .15s ease;
+    cursor: pointer;
+    border: none;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:focus-visible { outline: 3px solid rgba(10,132,255,.5); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-    .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  /* macOS primary (blue filled) */
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 1px 3px rgba(0,0,0,.35);
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+  .btn-primary.done { background: var(--ok); color: #fff; }
 
-    /* Inputs */
-    .form-group {
-      margin-bottom: 18px;
-    }
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-    .input-row {
-      display: flex;
-      gap: 12px;
-    }
-    input[type="text"], select {
-      width: 100%;
-      background: var(--card-inner);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 14px;
-      padding: 9px 12px;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    input[type="text"]:focus, select:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-    input[type="text"].invalid {
-      border-color: var(--error);
-    }
+  /* macOS secondary (filled gray) */
+  .btn-ghost {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--line-2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 1px 2px rgba(0,0,0,.25);
+  }
+  .btn-ghost:hover:not(:disabled) { filter: brightness(1.12); }
 
-    /* Range Slider */
-    .slider-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 10px;
-    }
-    .slider-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      min-width: 26px;
-    }
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
+  /* select box */
+  select { cursor: pointer; }
 
-    /* Message / Status */
-    #ip-msg {
-      font-size: 12px;
-      margin-top: 6px;
-      min-height: 18px;
-    }
+  .results-dim { opacity: .3; pointer-events: none; }
 
-    /* Results List */
-    .result-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 14px;
-    }
-    .result-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-    .result-label {
-      color: var(--text-muted);
-    }
-    .result-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  /* Subnet all-table */
+  #all-table { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  #all-table table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+  #all-table thead th {
+    background: var(--input);
+    border-bottom: 1px solid var(--line);
+    padding: 8px 12px;
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: .75rem;
+    letter-spacing: .03em;
+  }
+  #all-table td {
+    padding: 8px 12px;
+    border-top: 1px solid var(--line);
+  }
+  #all-table tbody tr:first-child td { border-top: 0; }
+  #all-table tbody tr:hover td { background: var(--surface-2); }
 
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.15s ease;
-      background: transparent;
-      color: var(--text);
-    }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-    .btn-primary:hover:not(:disabled) {
-      background: var(--accent-hover);
-    }
-    .btn-outline {
-      border-color: var(--border);
-      background: var(--card-inner);
-    }
-    .btn-outline:hover:not(:disabled) {
-      border-color: var(--text-muted);
-    }
-    .btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-    .action-bar {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 14px;
-    }
+  /* macOS traffic-light dots in modal titlebar */
+  #m-bar { background: var(--input); border: 1px solid var(--line); border-bottom: 0; border-radius: 10px 10px 0 0; padding: 10px 14px; font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #m-bar i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  #m-bar span { margin-left: 4px; }
+  #m-out { background: #0A0A0C; border: 1px solid var(--line); border-radius: 0 0 10px 10px; padding: 14px; overflow: auto; max-height: 38vh; white-space: pre; font-size: .8125rem; line-height: 1.7; color: var(--text); }
 
-    /* ISP Box */
-    #isp-box {
-      margin-top: 14px;
-      padding: 12px;
-      background: var(--card-inner);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-    .isp-line {
-      display: flex;
-      justify-content: space-between;
-    }
-    .isp-link {
-      color: var(--accent);
-      text-decoration: none;
-    }
-    .isp-link:hover {
-      text-decoration: underline;
-    }
+  /* ISP/ASN inline card */
+  .isp-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 7px; animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
 
-    /* All Subnets Table */
-    #all-wrap {
-      margin-top: 18px;
-    }
-    .table-container {
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      max-height: 280px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      text-align: left;
-    }
-    th {
-      background: var(--card-inner);
-      color: var(--text-muted);
-      font-weight: 500;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-    }
-    td {
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    tr.active-row {
-      background: rgba(59, 130, 246, 0.12);
-    }
-    tr.active-row td {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    /* Footer */
-    footer {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 100;
-    }
-    .modal-box {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      width: 100%;
-      max-width: 540px;
-      padding: 22px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .modal-header h2 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .close-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 20px;
-      cursor: pointer;
-      line-height: 1;
-    }
-    .close-btn:hover {
-      color: var(--text);
-    }
-    pre.cli-output {
-      background: var(--card-inner);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--text);
-      overflow-x: auto;
-      max-height: 200px;
-      margin: 14px 0;
-      white-space: pre-wrap;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 480px) {
-      .card {
-        padding: 16px;
-      }
-      .input-row {
-        flex-direction: column;
-      }
-      .result-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 3px;
-      }
-    }
-  </style>
+  /* Mobile */
+  @media (max-width: 639px) {
+    #results .row { flex-direction: column; align-items: flex-start; gap: 2px; }
+    #results .row dd { text-align: left; }
+    #all-table { border: 0; border-radius: 0; overflow: visible; }
+    #all-table table { display: block; }
+    #all-table thead { display: none; }
+    #all-table tbody { display: grid; gap: 8px; }
+    #all-table tr { display: block; padding: 2px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--input); }
+    #all-table tr[style] { border-color: var(--accent) !important; }
+    #all-table td { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0 !important; border-top: 1px solid var(--line) !important; white-space: normal !important; text-align: right; }
+    #all-table td:first-child { border-top: 0 !important; }
+    #all-table td::before { content: attr(data-l); flex: none; color: var(--muted); font-family: -apple-system, 'IBM Plex Sans', sans-serif; font-size: .8125rem; }
+  }
+  /* Tablet */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    #results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+    #results .row { flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--input); }
+    #results .row dd { text-align: left; }
+    #results .row:last-child { grid-column: 1 / -1; }
+  }
+  @media (pointer: coarse) { .btn { min-height: 44px; } input[type=range] { height: 28px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
 </head>
-<body>
+<body class="min-h-screen">
+<main class="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10 lg:max-w-6xl lg:px-8 lg:py-12">
 
-<div class="container">
-  
   <!-- Header -->
-  <header>
-    <div class="brand">
-      <span class="brand-icon">/IQ</span>
-      <h1>SubnetIQ</h1>
-    </div>
-    <p>Clean &amp; simple IPv4 subnet calculator with MikroTik CLI generator.</p>
+  <header class="mb-8">
+    <h1 class="flex items-center gap-3 text-2xl sm:text-3xl font-semibold tracking-tight">
+      <!-- macOS-blue icon pill -->
+      <span class="mono inline-flex items-center justify-center rounded-lg text-sm font-semibold"
+            style="width:2.25rem;height:2.25rem;background:var(--accent);color:#fff;" aria-hidden="true">/24</span>
+      SubnetIQ
+    </h1>
+    <p class="mt-2 text-sm" style="color:var(--muted)">IPv4 subnet calculator with a MikroTik IP pool generator. Enter an address and pick a prefix length to see the network range, masks and usable hosts.</p>
   </header>
 
-  <!-- Input Section -->
-  <section class="card">
-    <div class="card-title">Configuration</div>
-    
-    <div class="form-group">
-      <label for="ip">IPv4 Address</label>
-      <input id="ip" type="text" value="192.168.1.50" placeholder="192.168.1.1" autocomplete="off" spellcheck="false" class="mono">
-      <div id="ip-msg"></div>
-    </div>
+  <!-- Two-column layout matching original -->
+  <div class="grid gap-5 lg:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] lg:gap-6 lg:items-start xl:grid-cols-[minmax(0,27rem)_minmax(0,1fr)]">
+  <div class="grid gap-5">
 
-    <div class="form-group">
-      <label for="mask">Subnet Mask / CIDR</label>
-      <select id="mask" class="mono"></select>
-      <div class="slider-wrap">
-        <span class="slider-label mono">/1</span>
-        <input id="cidr" type="range" min="1" max="32" value="24" aria-label="CIDR slider">
-        <span class="slider-label mono" style="text-align: right;">/32</span>
+    <!-- Inputs Panel -->
+    <section class="panel p-5 sm:p-6">
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+
+        <div>
+          <label for="ip" class="block text-sm font-medium mb-2">IPv4 address</label>
+          <input id="ip" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                 value="192.168.1.50" placeholder="192.168.1.50"
+                 class="field mono w-full px-3 py-2.5 text-base" aria-describedby="ip-msg">
+          <p id="ip-msg" class="mt-2 text-sm min-h-[1.25rem]" role="alert" aria-live="polite"></p>
+          <div id="isp" class="hidden mt-3 rounded-lg p-3 text-sm"
+               style="background:var(--input);border:1px solid var(--line)" aria-live="polite"></div>
+        </div>
+
+        <div>
+          <label for="mask" class="block text-sm font-medium mb-2">Subnet mask</label>
+          <select id="mask" class="field mono w-full px-3 py-2.5 text-base"></select>
+          <div class="mt-4 flex items-center gap-3">
+            <span class="mono text-sm w-10" style="color:var(--muted)">/1</span>
+            <input id="cidr" type="range" min="1" max="32" value="24" aria-label="CIDR prefix length">
+            <span class="mono text-sm w-10 text-right" style="color:var(--muted)">/32</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Results Panel -->
+    <section class="panel p-5 sm:p-6" aria-label="Results">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+        <h2 class="text-base font-semibold">Results</h2>
+        <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <button id="export" type="button" class="btn btn-ghost">Generate MikroTik CLI</button>
+          <button id="copy"   type="button" class="btn btn-primary">Copy results</button>
+        </div>
+      </div>
+      <dl id="results" class="mt-2"></dl>
+    </section>
+
+  </div>
+
+  <!-- All Networks Panel -->
+  <section id="all-wrap" class="panel p-5 sm:p-6 hidden" aria-labelledby="all-title">
+    <h2 id="all-title" class="text-base font-semibold"></h2>
+    <p id="all-sub" class="text-sm mt-1" style="color:var(--muted)"></p>
+    <div id="all-table" class="mt-4 overflow-x-auto"></div>
+  </section>
+
+  </div><!-- end grid -->
+
+  <footer class="mt-10 text-center text-sm" style="color:var(--muted)">
+    Handcrafted with ❤️ by Md Jahid Hasan Emon &copy; 2026
+  </footer>
+</main>
+
+<!-- MikroTik Export Modal -->
+<div id="modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+     style="background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding-top:calc(1rem + env(safe-area-inset-top,0px));padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))">
+  <div role="dialog" aria-modal="true" aria-labelledby="m-title"
+       class="panel w-full max-w-2xl max-h-full overflow-y-auto p-5 sm:p-6">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 id="m-title" class="text-base font-semibold">Generate MikroTik CLI</h2>
+        <p class="text-sm mt-1" style="color:var(--muted)">Enter a name and choose an IP range, then submit to get the RouterOS commands.</p>
+      </div>
+      <button id="m-x" type="button" class="btn btn-ghost px-3 py-1.5 text-base leading-none" aria-label="Close">&times;</button>
+    </div>
+    <div class="mt-5 grid gap-4">
+      <div>
+        <label for="m-name" class="block text-sm font-medium mb-2">Name</label>
+        <input id="m-name" type="text" maxlength="32" autocomplete="off" spellcheck="false"
+               placeholder="e.g. LAN_Office" class="field mono w-full px-3 py-2.5 text-base">
+      </div>
+      <div>
+        <label for="m-range" class="block text-sm font-medium mb-2">Select IP range</label>
+        <select id="m-range" class="field mono w-full px-3 py-2.5 text-base"></select>
       </div>
     </div>
-
-    <!-- ISP Box (Shown for public IPs) -->
-    <div id="isp-box" class="hidden"></div>
-  </section>
-
-  <!-- Results Section -->
-  <section class="card">
-    <div class="card-title">
-      <span>Results</span>
-      <span id="type-badge" class="mono" style="font-size: 11px; text-transform: none; color: var(--success);"></span>
+    <p id="m-err" class="mt-3 text-sm min-h-[1.25rem]" role="alert" style="color:var(--err)"></p>
+    <button id="m-gen" type="button" class="btn btn-primary text-sm w-full sm:w-auto mt-1">Submit</button>
+    <!-- macOS-style terminal bar -->
+    <div id="m-bar" class="hidden mt-4">
+      <i style="background:#FF5F57"></i>
+      <i style="background:#FEBC2E"></i>
+      <i style="background:#28C840"></i>
+      <span class="mono">RouterOS terminal</span>
     </div>
-
-    <div id="results"></div>
-
-    <div class="action-bar">
-      <button id="export-btn" type="button" class="btn btn-outline">MikroTik CLI</button>
-      <button id="copy-btn" type="button" class="btn btn-primary">Copy Results</button>
-    </div>
-  </section>
-
-  <!-- All Subnets in Block -->
-  <section id="all-wrap" class="card hidden">
-    <div class="card-title">
-      <span id="all-title">Subnets in Block</span>
-    </div>
-    <div class="table-container">
-      <table id="all-table"></table>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer>
-    SubnetIQ &bull; Handcrafted by Md Jahid Hasan Emon &bull; 2026
-  </footer>
-
-</div>
-
-<!-- MikroTik Modal -->
-<div id="modal" class="modal-overlay hidden">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h2>Generate MikroTik CLI</h2>
-      <button id="modal-close-x" class="close-btn">&times;</button>
-    </div>
-
-    <div class="form-group">
-      <label for="m-name">Pool Name</label>
-      <input id="m-name" type="text" class="mono" placeholder="LAN_Pool" value="LAN_Pool">
-    </div>
-
-    <div class="form-group">
-      <label for="m-range">Select Range</label>
-      <select id="m-range" class="mono"></select>
-    </div>
-
-    <pre id="m-cli" class="cli-output"></pre>
-
-    <div class="action-bar">
-      <button id="modal-close-btn" class="btn btn-outline">Close</button>
-      <button id="m-copy-btn" class="btn btn-primary">Copy Script</button>
+    <pre id="m-out" class="mono hidden" tabindex="0" aria-label="RouterOS commands"></pre>
+    <div class="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
+      <button id="m-close" type="button" class="btn btn-ghost text-sm">Close</button>
+      <button id="m-copy"  type="button" class="btn btn-primary text-sm hidden">Copy to Clipboard</button>
     </div>
   </div>
 </div>
@@ -492,268 +327,322 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   const ipEl = $('ip'), cidrEl = $('cidr'), maskEl = $('mask');
-  const msgEl = $('ip-msg'), resultsEl = $('results'), typeBadge = $('type-badge');
-  const copyBtn = $('copy-btn'), exportBtn = $('export-btn');
-  const ispBox = $('isp-box');
-  const allWrap = $('all-wrap'), allTitle = $('all-title'), allTable = $('all-table');
+  const msgEl = $('ip-msg'), resultsEl = $('results'), copyBtn = $('copy');
 
-  const toInt = (o) => (((o[0] << 24) | (o[1] << 16) | (o[2] << 8) | o[3]) >>> 0);
-  const toDotted = (n) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
-  const maskFor = (c) => (c === 0 ? 0 : (0xFFFFFFFF << (32 - c)) >>> 0);
-  const fmt = (n) => n.toLocaleString('en-US');
+  const toInt   = (o) => (((o[0]<<24)|(o[1]<<16)|(o[2]<<8)|o[3])>>>0);
+  const toDotted = (n) => [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+  const maskFor  = (c) => (c===0?0:(0xFFFFFFFF<<(32-c))>>>0);
+  const fmt      = (n) => n.toLocaleString('en-US');
 
-  // Populate mask select
-  for (let c = 1; c <= 32; c++) {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = `/${c}  –  ${toDotted(maskFor(c))}`;
-    maskEl.appendChild(opt);
+  // Populate mask dropdown /1–/32
+  for (let c=1;c<=32;c++){
+    const o=document.createElement('option');
+    o.value=c; o.textContent='/'+c+'  –  '+toDotted(maskFor(c));
+    maskEl.appendChild(o);
   }
-  maskEl.value = 24;
+  maskEl.value=24;
 
-  function parseIp(raw) {
-    const v = raw.trim();
-    if (!v) return { ok: false, msg: 'Enter an IPv4 address (e.g. 192.168.1.1)' };
-    if (/[^0-9.]/.test(v)) return { ok: false, msg: 'Only numbers and dots allowed' };
-    const parts = v.split('.');
-    if (parts.length !== 4) return { ok: false, msg: 'Must contain exactly 4 octets' };
-    for (let i = 0; i < 4; i++) {
-      const p = parts[i];
-      if (p === '' || isNaN(p)) return { ok: false, msg: 'Invalid format' };
-      if (p.length > 1 && p[0] === '0') return { ok: false, msg: `Remove leading zero in "${p}"` };
-      const num = parseInt(p, 10);
-      if (num < 0 || num > 255) return { ok: false, msg: `Octet "${p}" must be 0–255` };
+  function parseIp(raw){
+    const v=raw.trim();
+    if(!v) return{ok:false,msg:'Enter an IPv4 address, for example 192.168.1.50.',quiet:true};
+    if(/[^0-9.]/.test(v)) return{ok:false,msg:'Use only digits and dots.'};
+    if(/\.\./.test(v)||v.startsWith('.')||v.endsWith('.')){
+      return{ok:false,msg:v.endsWith('.')&&!/\.\./.test(v)?'Keep typing — enter a number after the dot.':'Remove the extra dot.'};
     }
-    return { ok: true, octets: parts.map(Number) };
+    const parts=v.split('.');
+    if(parts.length<4) return{ok:false,msg:'An IPv4 address has 4 numbers. You have '+parts.length+'.'};
+    if(parts.length>4) return{ok:false,msg:'An IPv4 address has only 4 numbers.'};
+    for(let i=0;i<4;i++){
+      const p=parts[i];
+      if(p.length>1&&p[0]==='0') return{ok:false,msg:'Remove the leading zero in "'+p+'" (use '+parseInt(p,10)+').'};
+      if(p.length>3||parseInt(p,10)>255) return{ok:false,msg:'"'+p+'" is too large — must be 0–255.'};
+    }
+    return{ok:true,octets:parts.map(Number)};
   }
 
-  function ipClass(first) {
-    if (first < 128) return 'A';
-    if (first < 192) return 'B';
-    if (first < 224) return 'C';
-    if (first < 240) return 'D';
-    return 'E';
-  }
+  function ipClass(f){ return f<128?'A':f<192?'B':f<224?'C':f<240?'D':'E'; }
+  const classNote={A:'Unicast, large networks',B:'Unicast, medium networks',C:'Unicast, small networks',D:'Multicast',E:'Reserved / experimental'};
 
-  function ipType(o) {
-    const a = o[0], b = o[1];
-    if (a === 127) return 'Loopback';
-    if (a === 169 && b === 254) return 'Link-local';
-    if (a >= 224 && a <= 239) return 'Multicast';
-    if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) return 'Private (RFC 1918)';
-    if (a === 100 && b >= 64 && b <= 127) return 'CGNAT';
-    if (a === 0) return 'Reserved';
-    if (a >= 240) return 'Reserved';
+  function ipType(o){
+    const a=o[0],b=o[1];
+    if(a===127) return 'Loopback';
+    if(a===169&&b===254) return 'Link-local (APIPA)';
+    if(a>=224&&a<=239) return 'Multicast';
+    if(a===10||(a===172&&b>=16&&b<=31)||(a===192&&b===168)) return 'Private (RFC 1918)';
+    if(a===0) return 'Reserved (this network)';
+    if(a===100&&b>=64&&b<=127) return 'Shared address space (CGNAT)';
+    if(a>=240) return o.every(x=>x===255)?'Limited broadcast':'Reserved';
     return 'Public';
   }
 
-  function compute(octets, cidr) {
-    const ip = toInt(octets);
-    const mask = maskFor(cidr);
-    const wild = (~mask) >>> 0;
-    const net = (ip & mask) >>> 0;
-    const bc = (net | wild) >>> 0;
-    let first, last, hosts;
-    if (cidr === 32) { first = last = net; hosts = 1; }
-    else if (cidr === 31) { first = net; last = bc; hosts = 2; }
-    else { first = net + 1; last = bc - 1; hosts = Math.pow(2, 32 - cidr) - 2; }
-
-    const cls = ipClass(octets[0]);
-    const type = ipType(octets);
-
-    return {
-      net: toDotted(net),
-      bc: toDotted(bc),
-      first: toDotted(first),
-      last: toDotted(last),
-      hosts: hosts,
-      mask: toDotted(mask),
-      wild: toDotted(wild),
-      cls: cls,
-      type: type,
-      items: [
-        ['Network Address', toDotted(net)],
-        ['Broadcast Address', toDotted(bc)],
-        ['Usable Range', `${toDotted(first)}  –  ${toDotted(last)}`],
-        ['Usable Hosts', fmt(hosts)],
-        ['Subnet Mask', `${toDotted(mask)}  (/ ${cidr})`],
-        ['Wildcard Mask', toDotted(wild)],
-        ['IP Class', `Class ${cls}`],
-        ['Address Type', type]
+  function compute(octets,cidr){
+    const ip=toInt(octets),mask=maskFor(cidr),wild=(~mask)>>>0;
+    const net=(ip&mask)>>>0,bc=(net|wild)>>>0;
+    let first,last,hosts;
+    if(cidr===32){first=last=net;hosts=1;}
+    else if(cidr===31){first=net;last=bc;hosts=2;}
+    else{first=net+1;last=bc-1;hosts=Math.pow(2,32-cidr)-2;}
+    const cls=ipClass(octets[0]);
+    return{
+      net:toDotted(net),first:toDotted(first),type:ipType(octets),
+      list:[
+        ['Network address',  toDotted(net)],
+        ['Broadcast address',toDotted(bc)],
+        ['First usable host',toDotted(first)],
+        ['Last usable host', toDotted(last)],
+        ['Total usable hosts',fmt(hosts)],
+        ['Subnet mask',      toDotted(mask)+'  (/'+cidr+')'],
+        ['Wildcard mask',    toDotted(wild)],
+        ['IP class',         cls+'  ('+classNote[cls]+')'],
+        ['IP type',          ipType(octets)]
       ]
     };
   }
 
-  let current = null;
-  let allNets = [];
+  function renderResults(list,dim){
+    resultsEl.className='mt-2'+(dim?' results-dim':'');
+    resultsEl.innerHTML='';
+    list.forEach(([k,v])=>{
+      const row=document.createElement('div'); row.className='row';
+      const dt=document.createElement('dt');
+      dt.className='text-sm'; dt.style.color='var(--muted)'; dt.textContent=k;
+      const dd=document.createElement('dd');
+      dd.className='mono text-base sm:text-lg font-medium text-right break-all';
+      dd.textContent=v;
+      if(k==='IP type'){
+        const c=v.startsWith('Private')?'var(--ok)':v==='Public'?'var(--warn)':'';
+        if(c) dd.style.color=c;
+      }
+      row.append(dt,dd);
+      resultsEl.appendChild(row);
+    });
+  }
 
-  function update() {
-    const cidr = parseInt(cidrEl.value, 10);
-    maskEl.value = cidr;
+  let current=null;
 
-    const parsed = parseIp(ipEl.value);
-    if (!parsed.ok) {
-      ipEl.classList.add('invalid');
-      msgEl.style.color = 'var(--error)';
-      msgEl.textContent = parsed.msg;
-      typeBadge.textContent = '';
-      copyBtn.disabled = true;
-      exportBtn.disabled = true;
-      resultsEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Enter a valid IP address to calculate.</div>';
-      allWrap.classList.add('hidden');
-      ispBox.classList.add('hidden');
-      current = null;
-      return;
+  function update(){
+    const cidr=parseInt(cidrEl.value,10);
+    maskEl.value=cidr;
+    const parsed=parseIp(ipEl.value);
+    if(!parsed.ok){
+      ipEl.classList.toggle('invalid',!parsed.quiet);
+      ipEl.setAttribute('aria-invalid',String(!parsed.quiet));
+      msgEl.style.color=parsed.quiet?'var(--muted)':'var(--err)';
+      msgEl.textContent=parsed.msg;
+      copyBtn.disabled=true; exportBtn.disabled=true;
+      renderAll(null); ispLookup(null); current=null;
+      const ph=['Network address','Broadcast address','First usable host','Last usable host','Total usable hosts','Subnet mask','Wildcard mask','IP class','IP type'].map(k=>[k,'–']);
+      renderResults(ph,true); return;
     }
-
     ipEl.classList.remove('invalid');
-    msgEl.style.color = 'var(--success)';
-    msgEl.textContent = 'Valid IPv4 Address';
-    copyBtn.disabled = false;
-    exportBtn.disabled = false;
+    ipEl.setAttribute('aria-invalid','false');
+    msgEl.style.color='var(--ok)';
+    msgEl.textContent='Valid IPv4 address.';
+    copyBtn.disabled=false; exportBtn.disabled=false;
 
-    const out = compute(parsed.octets, cidr);
-    current = { ip: parsed.octets.join('.'), cidr, items: out.items, net: out.net, first: out.first, last: out.last, hosts: out.hosts };
+    const out=compute(parsed.octets,cidr);
+    current={ip:parsed.octets.join('.'),cidr,list:out.list,net:out.net,first:out.first};
+    renderResults(out.list,false);
+    renderAll(parsed.octets,cidr);
 
-    typeBadge.textContent = out.type;
-    typeBadge.style.color = out.type.includes('Private') ? 'var(--success)' : (out.type === 'Public' ? 'var(--warning)' : 'var(--text-muted)');
-
-    // Render results
-    resultsEl.innerHTML = out.items.map(([label, val]) => `
-      <div class="result-row">
-        <span class="result-label">${label}</span>
-        <span class="result-val">${val}</span>
-      </div>
-    `).join('');
-
-    renderAll(parsed.octets, cidr);
-    ispLookup(out.type === 'Public' ? parsed.octets.join('.') : null);
-  }
-
-  function renderAll(o, cidr) {
-    const pb = Math.floor((cidr - 1) / 8) * 8;
-    const count = Math.pow(2, cidr - pb);
-    const size = Math.pow(2, 32 - cidr);
-    const ipn = toInt(o);
-    const base = (ipn & maskFor(pb)) >>> 0;
-    const pat = [0, 1, 2, 3].map((i) => (i < pb / 8 ? o[i] : '*')).join('.');
-
-    allTitle.textContent = `All /${cidr} Subnets in ${pat}`;
-    allNets = [];
-
-    let rows = '';
-    for (let i = 0; i < count; i++) {
-      const net = base + i * size, bc = net + size - 1;
-      let first = net + 1, last = bc - 1, pool = `${toDotted(first + 1)}-${toDotted(last)}`;
-      if (cidr === 32) { first = last = net; pool = ''; }
-      else if (cidr === 31) { first = net; last = bc; pool = ''; }
-
-      const hit = ipn >= net && ipn <= bc;
-      allNets.push({ net: toDotted(net), cidr, first: toDotted(first), last: toDotted(last), bc: toDotted(bc), pool, hit });
-
-      rows += `
-        <tr class="${hit ? 'active-row' : ''}">
-          <td>${toDotted(net)}/${cidr}</td>
-          <td>${toDotted(first)} – ${toDotted(last)}</td>
-          <td>${toDotted(bc)}</td>
-        </tr>`;
+    msgEl.textContent='Valid IPv4 address. Detected type: ';
+    if(out.type==='Public'){
+      const tag=document.createElement('span');
+      tag.textContent='Public';
+      tag.style.cssText='color:var(--warn);background:rgba(255,159,10,.12);border:1px solid rgba(255,159,10,.4);border-radius:999px;padding:1px 8px;font-size:.8125rem;';
+      msgEl.appendChild(tag);
+    } else {
+      msgEl.textContent+=out.type+'.';
     }
-
-    allTable.innerHTML = `
-      <thead>
-        <tr>
-          <th>Subnet</th>
-          <th>Usable Range</th>
-          <th>Broadcast</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>`;
-    allWrap.classList.remove('hidden');
-  }
-
-  // ISP Lookup
-  let ispTimer = null;
-  function ispLookup(ip) {
-    if (!ip) {
-      clearTimeout(ispTimer);
-      ispBox.classList.add('hidden');
-      return;
-    }
-    ispBox.innerHTML = '<span style="color:var(--text-muted);">Fetching ISP info...</span>';
-    ispBox.classList.remove('hidden');
-
-    clearTimeout(ispTimer);
-    ispTimer = setTimeout(async () => {
-      try {
-        const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`);
-        const d = await res.json();
-        if (d && d.success !== false) {
-          const org = d.connection?.isp || d.connection?.org || 'Unknown';
-          const asn = d.connection?.asn ? `AS${d.connection.asn}` : 'N/A';
-          const loc = [d.city, d.country].filter(Boolean).join(', ');
-          ispBox.innerHTML = `
-            <div class="isp-line"><span>ISP / Org:</span> <strong>${org}</strong></div>
-            <div class="isp-line"><span>ASN &amp; Location:</span> <span>${asn} &bull; ${loc}</span></div>
-            <div class="isp-line" style="margin-top:4px;"><a href="https://bgp.he.net/ip/${ip}" target="_blank" class="isp-link">View BGP details on bgp.he.net &rarr;</a></div>
-          `;
-          return;
-        }
-      } catch (e) {}
-      ispBox.innerHTML = `<span>ISP data unavailable.</span> <a href="https://bgp.he.net/ip/${ip}" target="_blank" class="isp-link">Check bgp.he.net</a>`;
-    }, 400);
+    ispLookup(out.type==='Public'?parsed.octets.join('.'):null);
   }
 
   // Copy
-  function copyText(str, btn, normalTxt) {
-    navigator.clipboard.writeText(str).then(() => {
-      btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = normalTxt; }, 1500);
-    });
+  function legacyCopy(t){
+    const ta=document.createElement('textarea');
+    ta.value=t; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    let ok=false; try{ok=document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta); return ok;
+  }
+  async function copyResults(){
+    if(!current) return;
+    const text=['IPv4 subnet: '+current.ip+'/'+current.cidr,...current.list.map(([k,v])=>k+': '+v)].join('\n');
+    let ok=false;
+    try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);ok=true;}}catch(e){}
+    if(!ok) ok=legacyCopy(text);
+    copyBtn.textContent=ok?'Copied':'Copy failed — select manually.';
+    copyBtn.classList.toggle('done',ok);
+    setTimeout(()=>{copyBtn.textContent='Copy results';copyBtn.classList.remove('done');},1800);
   }
 
-  copyBtn.addEventListener('click', () => {
-    if (!current) return;
-    const txt = current.items.map(([k, v]) => `${k}: ${v}`).join('\n');
-    copyText(txt, copyBtn, 'Copy Results');
-  });
+  // IP Type
+  const esc=(s)=>String(s).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  // Modal
-  const modal = $('modal'), mName = $('m-name'), mRange = $('m-range'), mCli = $('m-cli'), mCopyBtn = $('m-copy-btn');
+  // All subnets table
+  const exportBtn=$('export');
+  const allWrap=$('all-wrap'),allTable=$('all-table'),allTitle=$('all-title'),allSub=$('all-sub');
+  let allNets=[];
 
-  function renderCli() {
-    const name = mName.value.trim() || 'LAN_Pool';
-    const sel = allNets[parseInt(mRange.value, 10)];
-    if (!sel || !sel.pool) {
-      mCli.textContent = '# No pool available for this prefix size';
-      return;
+  function renderAll(o,cidr){
+    if(!o){allNets=[];allWrap.classList.add('hidden');return;}
+    const pb=Math.floor((cidr-1)/8)*8;
+    const count=Math.pow(2,cidr-pb),size=Math.pow(2,32-cidr);
+    const ipn=toInt(o),base=(ipn&maskFor(pb))>>>0;
+    const pat=[0,1,2,3].map(i=>i<pb/8?o[i]:'*').join('.');
+    allTitle.textContent='All '+count+' possible /'+cidr+' networks for '+pat;
+    allSub.textContent='The highlighted row contains '+o.join('.')+'.';
+    const td='px-3 py-2 mono whitespace-nowrap text-sm';
+    let rows=''; allNets=[];
+    for(let i=0;i<count;i++){
+      const net=base+i*size,bc=net+size-1;
+      let first=net+1,last=bc-1,pool=toDotted(first+1)+'-'+toDotted(last);
+      if(cidr===32){first=last=net;pool='';}
+      else if(cidr===31){first=net;last=bc;pool='';}
+      allNets.push({net:toDotted(net),cidr,first:toDotted(first),last:toDotted(last),bc:toDotted(bc),pool,hit:ipn>=net&&ipn<=bc});
+      const hit=ipn>=net&&ipn<=bc;
+      rows+='<tr'+(hit?' style="background:rgba(10,132,255,.1)"':'')+'>'
+        +'<td class="'+td+'"'+(hit?' style="color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)"':'')
+        +' data-l="Network">'+toDotted(net)+'</td>'
+        +'<td class="'+td+'" data-l="Usable range">'+toDotted(first)+' &ndash; '+toDotted(last)+'</td>'
+        +'<td class="'+td+'" data-l="Broadcast">'+toDotted(bc)+'</td></tr>';
     }
-    mCli.textContent = `/ip pool\nadd name=${name} ranges=${sel.pool}\n\n/ip dhcp-server network\nadd address=${sel.net}/${sel.cidr} gateway=${sel.first}`;
+    allTable.innerHTML='<table class="w-full min-w-[480px]"><thead><tr>'
+      +['Network address','Usable host range','Broadcast address'].map(h=>'<th>'+h+'</th>').join('')
+      +'</tr></thead><tbody>'+rows+'</tbody></table>';
+    allWrap.classList.remove('hidden');
   }
 
-  exportBtn.addEventListener('click', () => {
-    mRange.innerHTML = '';
-    allNets.forEach((n, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      opt.selected = n.hit;
-      opt.textContent = `${n.net}/${n.cidr} ${n.pool ? `(Pool: ${n.pool})` : ''}`;
-      mRange.appendChild(opt);
+  // ISP & ASN lookup
+  const ispEl=$('isp');
+  let ispTimer=null,ispCtl=null,ispLast='';
+  const ispCache={};
+  const ispShow=(html)=>{ispEl.innerHTML=html;ispEl.classList.remove('hidden');};
+  const heLink=()=>'<a href="https://bgp.he.net/ip/'+encodeURIComponent(ispLast)+'" target="_blank" rel="noopener noreferrer" class="mono" style="color:var(--accent);text-decoration:underline;text-underline-offset:3px">View on bgp.he.net</a>';
+  const ispFail=()=>ispShow('<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap"><span style="color:var(--muted)">ISP info unavailable</span>'+heLink()+'</div>');
+  const ispRow=(label,value)=>'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="color:var(--muted)">'+label+'</span><span class="mono" style="color:var(--text);text-align:right">'+value+'</span></div>';
+
+  function ispRender(d){
+    const c=d.connection||{};
+    const org=c.isp||c.org||d.org||'';
+    const asn=c.asn?'AS'+c.asn:(d.asn||'');
+    if(!org&&!asn){ispFail();return;}
+    const loc=[d.city,d.country||d.country_name].filter(Boolean).join(', ')+(d.country_code?' ('+d.country_code+')':'');
+    const badge='<span class="mono" style="border:1px solid var(--line-2);border-radius:999px;padding:1px 8px;font-size:.75rem;color:var(--muted)">'+esc(loc)+'</span>';
+    ispShow('<div style="display:grid;gap:6px">'
+      +ispRow('ISP / Organization',esc(org||'Unknown'))
+      +ispRow('ASN',esc(asn||'Unknown'))
+      +(d.prefix?ispRow('Prefix',esc(d.prefix)):'')
+      +(loc.trim()?ispRow('Location',badge):'')
+      +ispRow('BGP details',heLink())
+      +'</div>');
+  }
+
+  function ispLookup(ip){
+    if(!ip){clearTimeout(ispTimer);if(ispCtl){ispCtl.abort();ispCtl=null;}ispLast='';ispEl.classList.add('hidden');ispEl.innerHTML='';return;}
+    if(ip===ispLast) return;
+    ispLast=ip; clearTimeout(ispTimer);
+    if(ispCtl){ispCtl.abort();ispCtl=null;}
+    if(ispCache[ip]){ispRender(ispCache[ip]);return;}
+    ispShow('<span class="isp-dot"></span><span class="mono" style="color:var(--muted)">Fetching ISP &amp; ASN...</span>');
+    ispTimer=setTimeout(async()=>{
+      const ctl=new AbortController(); ispCtl=ctl;
+      const timeout=setTimeout(()=>ctl.abort(),8000);
+      try{
+        let pd=null;
+        try{const pr=await fetch('https://ipwho.is/'+encodeURIComponent(ip),{signal:ctl.signal});if(pr.ok){const pj=await pr.json();if(pj&&pj.success!==false)pd=pj;}}catch(e){if(ctl.signal.aborted)throw e;}
+        if(pd){ispCache[ip]=pd;ispRender(pd);return;}
+        try{const rr=await fetch('https://stat.ripe.net/data/prefix-overview/data.json?resource='+encodeURIComponent(ip),{signal:ctl.signal});if(rr.ok){const rj=await rr.json();const a=rj&&rj.data&&rj.data.asns&&rj.data.asns[0];if(a){const rd={connection:{asn:a.asn,isp:a.holder},prefix:rj.data.resource};ispCache[ip]=rd;ispRender(rd);return;}}}catch(e){if(ctl.signal.aborted)throw e;}
+        const r=await fetch('https://ipapi.co/'+encodeURIComponent(ip)+'/json/',{signal:ctl.signal});
+        if(!r.ok)throw new Error('http '+r.status);
+        const d=await r.json(); if(!d||d.success===false||d.error)throw new Error('lookup failed');
+        ispCache[ip]=d; ispRender(d);
+      }catch(e){if(ispCtl===ctl)ispFail();}finally{clearTimeout(timeout);if(ispCtl===ctl)ispCtl=null;}
+    },500);
+  }
+
+  // MikroTik modal
+  const modal=$('modal'),mOut=$('m-out'),mCopy=$('m-copy');
+  const mName=$('m-name'),mRange=$('m-range'),mErr=$('m-err'),mGen=$('m-gen');
+  const bar=$('m-bar');
+  let lastFocus=null;
+  const ros=(s)=>String(s).replace(/[\\\"$?]/g,'\\$&');
+
+  function buildCli(){
+    if(!current) return '# Enter a valid IPv4 address first.';
+    const name=mName.value.trim().replace(/\s+/g,'_').replace(/[^\w.\-]/g,'');
+    const sel=allNets[parseInt(mRange.value,10)];
+    if(!sel) return '';
+    if(!sel.pool) return '# No IP pool: a /'+sel.cidr+' network has no spare addresses';
+    return '/ip pool\nadd name='+name+' ranges='+sel.pool;
+  }
+  const hideOut=()=>{mOut.classList.add('hidden');mCopy.classList.add('hidden');bar.classList.add('hidden');};
+  const hl=(t)=>t.split('\n').map(l=>{
+    if(l[0]==='#') return '<span style="color:var(--muted)">'+esc(l)+'</span>';
+    if(l[0]==='/') return '<span style="color:var(--accent)">'+esc(l)+'</span>';
+    return esc(l).replace(/(\w+=)(\S+)/g,'<span style="color:var(--muted)">$1</span><span style="color:var(--text)">$2</span>').replace(/^add/,'<span style="color:var(--ok)">add</span>');
+  }).join('\n');
+
+  function fillRanges(){
+    mRange.innerHTML='';
+    allNets.forEach((n,i)=>{
+      const o=document.createElement('option');
+      o.value=i; o.selected=n.hit;
+      o.textContent=n.net+'/'+n.cidr+(n.pool?'  (pool '+n.pool+')':'');
+      mRange.appendChild(o);
     });
-    renderCli();
+  }
+  function submitCli(){
+    mErr.textContent='';
+    if(!allNets.length){mErr.textContent='Enter a valid IPv4 address first.';hideOut();return;}
+    if(!mName.value.trim().replace(/[^\w.\-]/g,'')){mErr.textContent='Enter a name using letters, numbers, underscores or hyphens.';hideOut();return;}
+    mOut.innerHTML=hl(buildCli());
+    mOut.classList.remove('hidden');mCopy.classList.remove('hidden');bar.classList.remove('hidden');
+  }
+  const refreshCli=()=>{if(!mOut.classList.contains('hidden'))submitCli();};
+  mName.addEventListener('input',refreshCli);
+  mRange.addEventListener('change',refreshCli);
+  mGen.addEventListener('click',submitCli);
+  mName.addEventListener('keydown',(e)=>{if(e.key==='Enter')submitCli();});
+
+  function openModal(){
+    lastFocus=document.activeElement;
+    fillRanges(); hideOut(); mErr.textContent='';
     modal.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+    mName.focus();
+  }
+  function closeModal(){
+    modal.classList.add('hidden');
+    document.body.style.overflow='';
+    if(lastFocus) lastFocus.focus();
+  }
+  exportBtn.addEventListener('click',()=>openModal());
+  $('m-x').addEventListener('click',closeModal);
+  $('m-close').addEventListener('click',closeModal);
+  modal.addEventListener('click',(e)=>{if(e.target===modal)closeModal();});
+  modal.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape'){closeModal();return;}
+    if(e.key!=='Tab') return;
+    const f=Array.from(modal.querySelectorAll('button,input,select,pre')).filter(x=>x.offsetParent!==null),a=f[0],z=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}
+    else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}
   });
 
-  $('modal-close-x').addEventListener('click', () => modal.classList.add('hidden'));
-  $('modal-close-btn').addEventListener('click', () => modal.classList.add('hidden'));
-  mName.addEventListener('input', renderCli);
-  mRange.addEventListener('change', renderCli);
-  mCopyBtn.addEventListener('click', () => copyText(mCli.textContent, mCopyBtn, 'Copy Script'));
+  mCopy.addEventListener('click',async()=>{
+    const text=mOut.textContent;
+    let ok=false;
+    try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);ok=true;}}catch(e){}
+    if(!ok) ok=legacyCopy(text);
+    mCopy.textContent=ok?'Copied':'Copy failed.';
+    mCopy.classList.toggle('done',ok);
+    setTimeout(()=>{mCopy.textContent='Copy to Clipboard';mCopy.classList.remove('done');},1800);
+  });
 
-  // Inputs
-  ipEl.addEventListener('input', update);
-  cidrEl.addEventListener('input', update);
-  maskEl.addEventListener('change', () => { cidrEl.value = maskEl.value; update(); });
-
+  ipEl.addEventListener('input',update);
+  cidrEl.addEventListener('input',update);
+  maskEl.addEventListener('change',()=>{cidrEl.value=maskEl.value;update();});
+  copyBtn.addEventListener('click',copyResults);
   update();
 })();
 </script>
