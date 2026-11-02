@@ -697,8 +697,8 @@
         style="background:var(--surface);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;">
         <div class="flex items-center justify-between gap-3">
           <div>
-            <h2 id="m-title" class="text-base font-semibold">Generate MikroTik CLI</h2>
-            <p class="text-sm mt-1" style="color:var(--muted)">RouterOS commands for interface IP addressing &amp; subnet pool configuration.</p>
+            <h2 id="m-title" class="text-base font-semibold">MikroTik IP Pool Export</h2>
+            <p class="text-sm mt-1" style="color:var(--muted)">Generate MikroTik /ip pool command for the selected subnet.</p>
           </div>
           <span id="m-protocol-badge" class="mono text-xs px-2.5 py-1 rounded font-semibold border"
             style="background:rgba(239,68,68,0.12);color:var(--accent);border-color:rgba(239,68,68,0.3)">IPv4</span>
@@ -706,17 +706,12 @@
 
         <div class="mt-5 grid gap-4 sm:grid-cols-2">
           <div>
-            <label for="m-name" class="block text-sm font-medium mb-2">Comment / Name</label>
+            <label for="m-name" class="block text-sm font-medium mb-2">Pool Name</label>
             <input id="m-name" type="text" maxlength="32" autocomplete="off" spellcheck="false"
-              placeholder="e.g. LAN_Office" class="field mono w-full px-3 py-2.5 text-base sm:text-sm">
+              value="5Mbps" placeholder="e.g. 5Mbps" class="field mono w-full px-3 py-2.5 text-base sm:text-sm">
           </div>
           <div>
-            <label for="m-interface" class="block text-sm font-medium mb-2">Interface</label>
-            <input id="m-interface" type="text" maxlength="32" autocomplete="off" spellcheck="false"
-              value="ether1" placeholder="e.g. ether1 or bridge" class="field mono w-full px-3 py-2.5 text-base sm:text-sm">
-          </div>
-          <div class="sm:col-span-2">
-            <label for="m-range" class="block text-sm font-medium mb-2">Target Subnet / Prefix</label>
+            <label for="m-range" class="block text-sm font-medium mb-2">Select Subnet</label>
             <select id="m-range" class="field mono w-full px-3 py-2.5 text-base sm:text-sm"></select>
           </div>
         </div>
@@ -1413,7 +1408,7 @@
           const firstHostComp = wordsToCompressed(bigIntToWords(firstHost));
 
           const hit = (num >= net && num <= last);
-          const pool = (cidr < 127) ? (firstHostComp + ' – ' + lastComp) : '';
+          const pool = (cidr < 127) ? (firstHostComp + '-' + lastComp) : '';
 
           allNets.push({
             version: 6,
@@ -1563,46 +1558,18 @@
 
       // MikroTik Export Modal Logic
       const modal = $('modal'), mOut = $('m-out'), mCopy = $('m-copy'), mProtoBadge = $('m-protocol-badge');
-      const mName = $('m-name'), mInterface = $('m-interface'), mRange = $('m-range'), mErr = $('m-err'), mGen = $('m-gen');
+      const mName = $('m-name'), mRange = $('m-range'), mErr = $('m-err'), mGen = $('m-gen');
       const bar = $('m-bar');
       let lastFocus = null;
 
       function buildCli() {
-        if (!current) return '# Enter a valid IP address first.';
-        const name = mName.value.trim().replace(/\s+/g, '_').replace(/[^\w.\-]/g, '') || 'LAN_Office';
-        const iface = (mInterface && mInterface.value.trim()) ? mInterface.value.trim().replace(/[^\w.\-\/]/g, '') : 'ether1';
+        if (!current) return '';
+        const name = mName.value.trim().replace(/\s+/g, '_') || '5Mbps';
         const sel = allNets[parseInt(mRange.value, 10)];
-        if (!sel) return '# Select a valid subnet from the list.';
-
-        if (current.version === 6) {
-          let out = '# ====================================================\n'
-            + '# MikroTik RouterOS IPv6 Configuration\n'
-            + '# Subnet: ' + sel.net + '/' + sel.cidr + '\n'
-            + '# ====================================================\n\n'
-            + '# 1. Interface IPv6 Address & SLAAC Advertisement\n'
-            + '/ipv6 address\n'
-            + 'add address=' + sel.first + '/' + sel.cidr + ' interface=' + iface + ' advertise=yes comment="' + name + '"\n\n'
-            + '# 2. IPv6 Subnet Pool (Prefix Delegation)\n'
-            + '/ipv6 pool\n'
-            + 'add name="' + name + '_pool" prefix=' + sel.net + '/' + sel.cidr + ' prefix-length=' + sel.cidr;
-          return out;
-        } else {
-          let out = '# ====================================================\n'
-            + '# MikroTik RouterOS IPv4 Configuration\n'
-            + '# Subnet: ' + sel.net + '/' + sel.cidr + '\n'
-            + '# ====================================================\n\n'
-            + '# 1. Interface IPv4 Address\n'
-            + '/ip address\n'
-            + 'add address=' + sel.first + '/' + sel.cidr + ' interface=' + iface + ' network=' + sel.net + ' comment="' + name + '"\n\n';
-          if (sel.pool) {
-            out += '# 2. DHCP Server IP Pool\n'
-              + '/ip pool\n'
-              + 'add name="' + name + '_pool" ranges=' + sel.pool;
-          } else {
-            out += '# (Note: /' + sel.cidr + ' has no separate spare pool addresses)';
-          }
-          return out;
-        }
+        if (!sel) return '';
+        const range = sel.pool || (sel.first + '-' + sel.last);
+        const poolCmd = (sel.version === 6 ? '/ipv6 pool' : '/ip pool');
+        return poolCmd + '\nadd name=' + name + ' ranges=' + range;
       }
 
       const hideOut = () => { mOut.classList.add('hidden'); mCopy.classList.add('hidden'); bar.classList.add('hidden'); };
@@ -1630,8 +1597,10 @@
       function submitCli() {
         mErr.textContent = '';
         if (!allNets.length) { mErr.textContent = 'Enter a valid IP address first.'; hideOut(); return; }
-        if (!mName.value.trim().replace(/[^\w.\-]/g, '')) { mErr.textContent = 'Enter a valid name using letters, numbers, underscores or hyphens.'; hideOut(); return; }
-        mOut.innerHTML = hl(buildCli());
+        if (!mName.value.trim().replace(/[^\w.\-]/g, '')) { mErr.textContent = 'Enter a valid pool name using letters, numbers, underscores or hyphens.'; hideOut(); return; }
+        const cliText = buildCli();
+        if (!cliText) { mErr.textContent = 'Unable to generate pool command for this subnet.'; hideOut(); return; }
+        mOut.innerHTML = hl(cliText);
         mOut.classList.remove('hidden');
         mCopy.classList.remove('hidden');
         bar.classList.remove('hidden');
@@ -1639,7 +1608,6 @@
 
       const refreshCli = () => { if (!mOut.classList.contains('hidden')) submitCli(); };
       mName.addEventListener('input', refreshCli);
-      if (mInterface) mInterface.addEventListener('input', refreshCli);
       mRange.addEventListener('change', refreshCli);
       mGen.addEventListener('click', submitCli);
       mName.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCli(); });
@@ -1650,7 +1618,7 @@
         hideOut();
         mErr.textContent = '';
         if (!mName.value.trim()) {
-          mName.value = 'LAN_Office';
+          mName.value = '5Mbps';
         }
         if (mProtoBadge) {
           mProtoBadge.textContent = (current && current.version === 6 ? 'IPv6 Mode' : 'IPv4 Mode');
